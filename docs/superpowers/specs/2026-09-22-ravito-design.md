@@ -123,30 +123,67 @@ must be tested against one before any claim is made about it.
 ## Pace model
 
 Anchored on the runner's declared flat pace, scaled by the metabolic cost of
-running on a gradient, following Minetti et al. (2002), which gives the energy
-cost of running in J/kg/m as a fifth-order polynomial in gradient over the
-range -45 to +45 percent.
+running on a gradient, following Minetti et al. (2002), *Energy cost of walking
+and running at extreme uphill and downhill slopes*, J Appl Physiol:
 
-**The polynomial coefficients must be read from the paper and cited in
-`sources.ts` before any implementation.** They are not reproduced here from
-memory, and an unverified coefficient is not shipped.
+```
+Cr(i) = 155.4i^5 - 30.4i^4 - 43.3i^3 + 46.3i^2 + 19.5i + 3.6
+```
 
-Three corrections on top of the raw cost ratio:
+in J/kg/m, valid for gradients between -0.45 and +0.45. Level running costs
+3.6. The coefficients above are quoted from the paper, not from memory, and are
+cited as such in `sources.ts`.
 
-- **Walking cap.** Above roughly 20 percent gradient nearly every runner walks,
-  and speed stops depending on running fitness. Above that threshold the model
-  switches to a walking speed derived from ascent rate in metres per hour, not
-  from the flat pace.
-- **Descent limit.** The cost curve has a minimum around -20 percent, implying
-  a speed higher than anyone sustains on technical ground. Descent speed is
-  capped at a multiple of flat speed, declared as an assumption.
-- **Duration decay.** Pace degrades over long efforts. Applied as a percentage
-  per hour beyond the third hour, declared in the interface as an assumption
-  and not as a measurement.
+### Where that model holds, and where it does not
 
-Output is a central estimate with a low and high bound. The bounds come from
-varying the decay and the walking speed across a declared plausible interval,
-not from a statistical model the data does not support.
+Checked against one real mountain race: 16.35 km, 1252 m of ascent, 2h41,
+declared flat pace 5:37 per kilometre. Time per terrain band, real against
+predicted:
+
+```
+terrain           distance     real    model    error
+steep descent      3.69 km   29.3 mn  15.8 mn   +85%
+descent            3.30 km   18.7 mn  13.8 mn   +36%
+flat               2.30 km   16.5 mn  13.5 mn   +23%
+climb              3.31 km   33.8 mn  31.4 mn    +8%
+steep climb        3.70 km   62.7 mn  59.9 mn    +5%
+```
+
+**Uphill, the metabolic model is accurate to within eight percent. Downhill it
+is wrong by a factor approaching two.**
+
+That is not a flaw in the paper, it is a flaw in using it alone. Minetti
+measured metabolic cost on a treadmill. Downhill speed on a trail is not
+limited by metabolism: it is limited by technique, footing and braking. The
+cost curve has its minimum around -20 percent, which correctly says descending
+is metabolically cheap, and says nothing about whether anyone can run it.
+
+Even the flat sections ran 23 percent slower than the declared road flat pace,
+which is the same phenomenon in smaller form: trail flat is not road flat.
+
+### The model that follows
+
+- **Climbs** use Minetti directly. It is the part that measured well.
+- **Flat and descents** are governed by a terrain factor, not by metabolism.
+  The default values come from the single measurement above and are declared
+  as such in the interface: this is one course and one runner.
+- **Duration decay** beyond the third hour remains an assumption, labelled as
+  one, not a measurement.
+
+The interface says which parts of the estimate rest on published physiology and
+which rest on one calibration. Those are not the same kind of claim.
+
+### Calibrating on a race already run
+
+A runner who supplies a past race with its real time gets their own terrain
+factor computed instead of the default. This is the honest answer to a model
+that cannot know their technical ability: not to guess it, but to measure it
+from something they have already done.
+
+Output is a range, never a single time. The bounds come from varying the
+terrain factor across its plausible interval, and the interface states that the
+interval is wide because it covers something the tool has not measured about
+this runner.
 
 ## Nutrition model
 
@@ -228,6 +265,12 @@ prevents it, and no string is hard-coded outside a single place.
 
 ## Open questions, to settle during implementation
 
-None that block a start. Two constants need a source before release: the
-Minetti coefficients, and each nutrition range. Both are listed as explicit
-tasks rather than assumptions.
+The Minetti coefficients are now quoted from the paper and no longer open.
+
+Each nutrition range still needs its source before release, and that is an
+explicit task rather than an assumption.
+
+The terrain factor defaults rest on a single race. A second calibration course,
+ideally a runnable one rather than a mountain one, would tell whether the factor
+is stable per runner or varies with the terrain. Until then the interface says
+so.
