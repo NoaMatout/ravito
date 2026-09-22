@@ -83,14 +83,28 @@ GPX file
   -> ui.render
 ```
 
-## Elevation smoothing, and why it decides whether the tool is right
+## Elevation smoothing, measured rather than assumed
 
-Raw GPX elevation oscillates by a few metres continuously, from barometric
-drift or GPS error. Summing every positive difference inflates total ascent by
-roughly 30 to 50 percent. A course with 3400 m of real ascent commonly returns
-more than 4500 m when summed naively, and nothing about the output looks wrong.
+Raw track elevation oscillates continuously, from barometric drift or GPS
+error, and summing every positive difference overstates total ascent. The size
+of that error is **not** a constant, which is the part worth knowing.
 
-Two-stage treatment:
+Measured on two real races recorded with a barometric watch, against the
+figure the watch itself reports:
+
+```
+                     distance   real D+   naive sum   after processing
+mountain trail        16.3 km     1264 m    1299 m  +3%      1252 m  -1%
+rolling trail         12.1 km      218 m     273 m  +25%      218 m   0%
+```
+
+On a mountain course, sustained climbs dwarf the noise and a naive sum is only
+three percent high. On rolling terrain, where the real gain is small, the same
+noise represents a quarter of the total. The error is therefore worst exactly
+where the number is smallest, and it is invisible in both cases.
+
+Two-stage treatment, which reproduced the reference figure to within one
+percent on the mountain course and exactly on the rolling one:
 
 1. A moving median over a window of 5 points, which removes spikes without
    shifting real transitions the way a mean does.
@@ -98,7 +112,13 @@ Two-stage treatment:
    3 m since the last recorded low point. Oscillation below that is discarded.
 
 Both constants are declared in one place and documented as tunable. The
-threshold is the sensitive one and its effect is asserted by test.
+threshold is the sensitive one: on the rolling course it accounts for the whole
+correction, the median alone recovering only two points of the twenty-five.
+
+These measurements come from FIT files recorded by a barometric altimeter,
+which is a cleaner signal than a GPS-only track exported by a race organiser.
+The error on such a file is expected to be larger, not smaller, and the tool
+must be tested against one before any claim is made about it.
 
 ## Pace model
 
@@ -178,9 +198,12 @@ Pure modules make these cheap, and two are negative controls: they must fail
 against a naive implementation, and that is verified once when written.
 
 - **Elevation smoothing, negative control.** A synthetic track with a known
-  staircase profile, plus artificial noise. The computed ascent must equal the
-  real ascent within a small tolerance. A naive sum fails this test, which is
-  the point.
+  staircase profile, plus artificial noise calibrated on the rolling-trail
+  measurement above. The computed ascent must equal the real ascent within a
+  small tolerance. A naive sum fails this test, which is the point.
+- **Elevation smoothing against reality.** The two recorded races, as fixtures,
+  must come back within two percent of the reference figure. A synthetic test
+  proves the algorithm; only a real track proves the constants.
 - **Pace model.** A hand-computed reference case: a known distance at a known
   gradient with a known flat pace. Plus a monotonicity property: steeper never
   means faster on climbs.
