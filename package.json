@@ -1,0 +1,16 @@
+{
+  "name": "ravito",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Turn a race GPX and a runner profile into a per-leg fuelling plan, entirely in the browser.",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test dist/tests/*.test.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^5.6.0"
+  }
+}

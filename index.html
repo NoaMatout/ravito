@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ravito, a race fuelling plan</title>
+<style>
+  :root { --ink:#111; --soft:#5a5a5a; --line:#ddd; --bg:#fafaf8; --accent:#1f4f3f; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:56rem; margin:0 auto; padding:3rem 1.25rem 6rem; }
+  h1 { font-size:2rem; margin:0 0 .25rem }
+  .lede { color:var(--soft); margin:0 0 2.5rem; max-width:40rem }
+  h2 { font-size:.85rem; text-transform:uppercase; letter-spacing:.08em;
+       color:var(--soft); margin:2.5rem 0 .75rem; font-weight:600 }
+  label { display:block; font-size:.85rem; color:var(--soft); margin-bottom:.3rem }
+  input[type=text] { width:100%; padding:.6rem .7rem; border:1px solid var(--line);
+                     border-radius:6px; background:#fff; font:inherit }
+  .fields { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)) }
+  #drop { margin:1.5rem 0; padding:2rem; border:2px dashed var(--line); border-radius:10px;
+          text-align:center; color:var(--soft); cursor:pointer; background:#fff }
+  #drop.over { border-color:var(--accent); color:var(--accent) }
+  #file { display:none }
+  #course { margin:.5rem 0 0; font-size:.95rem }
+  .big { font-size:2.4rem; margin:.2rem 0; font-variant-numeric:tabular-nums }
+  .range { font-size:1rem; color:var(--soft) }
+  .note { color:var(--soft); font-size:.88rem }
+  .error { color:#8a1c1c; font-size:.9rem; margin:.75rem 0 }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums }
+  th,td { text-align:left; padding:.5rem .4rem; border-bottom:1px solid var(--line); font-size:.92rem }
+  th { font-weight:600; color:var(--soft); font-size:.8rem }
+  td.n { font-family:ui-monospace,SFMono-Regular,Menlo,monospace }
+  ul { padding-left:1.1rem } li { margin:.35rem 0 }
+  footer { margin-top:4rem; color:var(--soft); font-size:.85rem; border-top:1px solid var(--line);
+           padding-top:1rem }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#eee; --soft:#9a9a9a; --line:#333; --bg:#121212; --accent:#7fd1b9 }
+    input[type=text],#drop { background:#1b1b1b; color:inherit }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>ravito</h1>
+  <p class="lede">A race GPX and your flat pace in, a per-leg fuelling plan out.
+     Everything runs in this page: your track never leaves your machine, there is
+     no account and nothing is sent anywhere.</p>
+
+  <div class="fields">
+    <div>
+      <label for="pace">Your flat pace on road, min:sec per km</label>
+      <input id="pace" type="text" value="5:40" inputmode="numeric">
+    </div>
+    <div>
+      <label for="aid">Aid stations, km from the start</label>
+      <input id="aid" type="text" placeholder="12, 28, 41">
+    </div>
+    <div>
+      <label for="known">If this is a race you have run, your time (optional)</label>
+      <input id="known" type="text" placeholder="2h41">
+    </div>
+  </div>
+
+  <div id="drop">drop a GPX file here, or click to choose one</div>
+  <input id="file" type="file" accept=".gpx,application/gpx+xml">
+  <p id="course"></p>
+  <p id="message"></p>
+
+  <div id="plan"></div>
+
+  <footer>
+    Uphill speed follows a published metabolic model. Flat and descent follow a
+    terrain profile measured on one runner and one course, which is stated
+    wherever it is used. Not medical advice.
+  </footer>
+</main>
+<script type="module" src="./dist/src/ui.js"></script>
+</body>
+</html>
