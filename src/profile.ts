@@ -13,7 +13,12 @@ export const VIEW_HEIGHT = 180;
 /** Enough to keep every climb visible, few enough to keep the markup small. */
 export const SAMPLES = 480;
 
-export type Marker = { readonly name: string; readonly x: number; readonly y: number };
+export type Marker = {
+  readonly name: string;
+  readonly distanceM: number;
+  readonly x: number;
+  readonly y: number;
+};
 
 /** One band of a reading, as a filled slice of the area under the curve.
  *  Colouring the ground the runner covers reads better than colouring the sky
@@ -73,7 +78,12 @@ export function build(
     for (const p of points) {
       if (Math.abs(p.distance - s.distanceM) < Math.abs(nearest.distance - s.distanceM)) nearest = p;
     }
-    return { name: s.name, x: xOf(nearest.distance), y: yOf(nearest.elevation) };
+    return {
+      name: s.name,
+      distanceM: nearest.distance,
+      x: xOf(nearest.distance),
+      y: yOf(nearest.elevation),
+    };
   });
 
   // Elevation read off the drawn samples, so a slice's edge sits exactly on

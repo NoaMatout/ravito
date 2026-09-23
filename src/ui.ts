@@ -123,7 +123,11 @@ async function onFile(file: File) {
 /** The profile band, plus the aid stations named where they fall and a rule in
  *  kilometres underneath. The labels sit in HTML rather than in the SVG because
  *  the drawing is stretched to the measure and stretched text is unreadable. */
-function drawBand(shape: profile.Profile, course: string): string {
+function drawBand(
+  shape: profile.Profile,
+  course: string,
+  legs: readonly Leg[],
+): string {
   const pct = (x: number) => ((x / profile.VIEW_WIDTH) * 100).toFixed(3);
   const slices = shape.slices.length
     ? shape.slices
@@ -143,11 +147,30 @@ function drawBand(shape: profile.Profile, course: string): string {
       const at = Number(pct(m.x));
       const room = at - lastLabel > 3.2;
       if (room) lastLabel = at;
-      const end = at > 96 ? ' end' : '';
-      return (
-        `<span class="stop${end}" style="left:${at}%" title="${m.name}">` +
-        `<i></i><u></u>${room ? `<b>${i + 1}</b>` : ''}</span>`
+
+      // Matched by position: an organiser's waypoint and the leg it closes do
+      // not always carry the same spelling.
+      const leg = legs.reduce((best, l) =>
+        Math.abs(l.toM - m.distanceM) < Math.abs(best.toM - m.distanceM) ? l : best,
       );
+      const n = legs.indexOf(leg) + 1;
+      const spoken =
+        `R${n}, ${m.name}, at ${km(m.distanceM)}, reached in ${hhmm(leg.cumulativeSeconds)}. ` +
+        `The leg into it takes ${hhmm(leg.seconds)}, climbs ${Math.round(leg.ascent)} metres, ` +
+        `and asks for ${leg.carbsLow} to ${leg.carbsHigh} grams of carbohydrate.`;
+
+      // The slip is a sibling of the mark, not a child, so its edges are
+      // clamped against the drawing rather than against an 18 px button: a
+      // mark near either end would otherwise push the slip off the sheet.
+      return `<button class="stop${at > 96 ? ' end' : ''}" type="button"
+                style="left:${at}%" aria-label="${spoken}">
+        <i></i><u></u>${room ? `<b>${n}</b>` : ''}
+      </button><span class="card" aria-hidden="true" style="--at:${at}%">
+        <b>R${n}</b><span class="who">${m.name}</span>
+        <span class="where">${km(m.distanceM)} &middot; reached ${hhmm(leg.cumulativeSeconds)}</span>
+        <span class="what">Leg ${hhmm(leg.seconds)} &middot; D+ ${Math.round(leg.ascent)} m
+          &middot; ${leg.carbsLow}&ndash;${leg.carbsHigh} g</span>
+      </span>`;
     })
     .join('');
 
@@ -328,7 +351,7 @@ function render() {
                     aria-selected="${r.id === reading}">${r.label}</button>`,
         ).join('')}
       </div>
-      ${drawBand(shape, loaded.name)}
+      ${drawBand(shape, loaded.name, legs)}
       <p class="note">${Math.round(shape.lowest)} m at the lowest point,
         ${Math.round(shape.highest)} m at the highest. ${current.note}</p>
     </section>

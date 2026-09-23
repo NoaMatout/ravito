@@ -18,6 +18,7 @@
  *        --light                        emulate prefers-color-scheme: light
  *        --empty                        capture the blank booklet, no file
  *        --print                        emulate print media and write a PDF
+ *        --focus=<n>                    open the nth aid station's slip
  *        --url=<href>                   capture a deployed page instead of the
  *                                       local one; implies --empty, since the
  *                                       race file is not published
@@ -61,6 +62,11 @@ await send('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 2,
   mobile: width < 600,
 });
+// A headless document reports no focus, so :focus never matches and anything
+// that opens on focus photographs as absent. This is the switch that makes a
+// capture of a focused state mean something.
+if (opt('focus')) await send('Emulation.setFocusEmulationEnabled', { enabled: true });
+
 const media = [];
 if (flag('light')) media.push({ name: 'prefers-color-scheme', value: 'light' });
 if (media.length) await send('Emulation.setEmulatedMedia', { features: media });
@@ -85,6 +91,7 @@ const load = flag('empty') || opt('url')
        for (let n = 0; n < 100 && !document.querySelector('.plan'); n++)
          await new Promise((r) => setTimeout(r, 50));
        ${reading ? `document.querySelector('[data-reading="${reading}"]').click();` : ''}
+       ${opt('focus') ? `document.querySelectorAll('.stop')[${Number(opt('focus')) - 1}].focus();` : ''}
        await new Promise((r) => setTimeout(r, 700));
        return report();
      })()`;

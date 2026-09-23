@@ -41,6 +41,7 @@
   --measure: 64rem;
   --gutter: clamp(1.25rem, 4vw, 3rem);
   --rule-w: 3px;
+  --slip: 16rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -332,7 +333,7 @@ body {
 .readings button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink) }
 .readings button[aria-selected='true']::before { content: '\2014\00a0'; color: var(--spot) }
 
-.band { position: relative; margin-top: 1rem }
+.band { position: relative; margin-top: 1rem; overflow: visible }
 .band svg {
   display: block;
   width: 100%;
@@ -354,13 +355,33 @@ body {
 .hatch { opacity: 0.5 }
 
 /* Aid stations, named on the drawing rather than in a legend elsewhere. */
+/* Aid stations, named on the drawing rather than in a legend elsewhere.
+   Each mark is a control: hovering or tabbing to it opens the stand's slip,
+   which is the inverted ink plate the file button already uses rather than a
+   new card, because this world has no cards. */
 .stops { position: absolute; inset: 0; pointer-events: none }
-.stop { position: absolute; top: 0; bottom: 0; width: 0; transform: translateX(-50%) }
-.stop i { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--ink); opacity: 0.3 }
+.stop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  transform: translateX(-50%);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  cursor: help;
+  pointer-events: auto;
+}
+.stop i { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--ink);
+          opacity: 0.3; transition: opacity 140ms ease-out }
+.stop:hover i, .stop:focus i { opacity: 0.85 }
 .stop u {
   position: absolute;
   bottom: -1px;
-  left: -4px;
+  left: 50%;
+  margin-left: -4px;
   width: 0;
   height: 0;
   border-left: 4px solid transparent;
@@ -382,6 +403,52 @@ body {
   padding: 0.05rem 0.25rem;
   line-height: 1.35;
 }
+.stop:focus-visible { outline: 2px solid var(--spot); outline-offset: 0 }
+
+.card {
+  position: absolute;
+  bottom: calc(100% + 0.55rem);
+  /* Anchored on the drawing and clamped to it: centred on its mark where there
+     is room, flush with an edge where there is not. */
+  width: var(--slip);
+  left: clamp(0px, calc(var(--at) - var(--slip) / 2), calc(100% - var(--slip)));
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.5rem;
+  padding: 0.5rem 0.7rem 0.6rem;
+  text-align: left;
+  background: var(--ink);
+  color: var(--stock);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 160ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 160ms;
+}
+.stop:hover + .card, .stop:focus + .card {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.card b {
+  align-self: start;
+  margin-top: 0.12rem;
+  padding: 0.05rem 0.28rem;
+  background: var(--stock);
+  color: var(--ink);
+  font-stretch: 72%;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+}
+.card .who { font-stretch: 88%; font-weight: 600; font-size: 0.88rem; line-height: 1.3 }
+.card .where, .card .what { grid-column: 2; font-stretch: 78%; font-size: 0.8rem;
+                            line-height: 1.4; opacity: 0.8 }
+.card .where { margin-top: 0.15rem }
 
 .ruler {
   position: relative;
@@ -612,8 +679,8 @@ body {
   .lede, .form, .intake, .blank, .readings, .legend, .note, .caution,
   .colophon, .cut button, .section:not(.section--band) { display: none }
   .section--band { margin-top: 12pt }
-  .stop.end b { transform: translateX(-88%) }
-  .stop b { font-size: 5pt }
+  .card { display: none }
+    .stop b { font-size: 5pt }
   .pocket { border: 1.5pt solid #000; padding: 8pt 10pt; transform: none; box-shadow: none }
   .cut { margin-top: 10pt }
   .band svg { height: 120pt }
