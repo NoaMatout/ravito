@@ -18,6 +18,9 @@
  *        --light                        emulate prefers-color-scheme: light
  *        --empty                        capture the blank booklet, no file
  *        --print                        emulate print media and write a PDF
+ *        --url=<href>                   capture a deployed page instead of the
+ *                                       local one; implies --empty, since the
+ *                                       race file is not published
  *
  *  It prints the viewport width, the document's scroll width, its height, and
  *  any text whose contrast against its painted background falls under WCAG AA.
@@ -62,11 +65,12 @@ const media = [];
 if (flag('light')) media.push({ name: 'prefers-color-scheme', value: 'light' });
 if (media.length) await send('Emulation.setEmulatedMedia', { features: media });
 await send('Page.enable');
-await send('Page.navigate', { url: `http://localhost:8123/index.html?t=${Date.now()}` });
-await new Promise((r) => setTimeout(r, 1500));
+const page = opt('url') || 'http://localhost:8123/index.html';
+await send('Page.navigate', { url: `${page}${page.includes('?') ? '&' : '?'}t=${Date.now()}` });
+await new Promise((r) => setTimeout(r, opt('url') ? 3500 : 1500));
 
 const reading = opt('reading');
-const load = flag('empty')
+const load = flag('empty') || opt('url')
   ? `(async () => {
        await new Promise((r) => setTimeout(r, 400));
        return report();
