@@ -6,6 +6,8 @@
 
 A race GPX and your flat pace in, a per-leg fuelling plan out.
 
+**[Open it](https://noamatout.github.io/ravito/)** — nothing to install.
+
 Everything runs in the page. Your track is parsed locally and never leaves your
 machine: no account, no backend, nothing uploaded.
 
@@ -88,7 +90,11 @@ distances from the race road-book, because a GPX does not contain them and they
 are what makes a plan a plan. On a trail you can only reload where there is a
 stand.
 
-## Run it
+## Run it yourself
+
+The published page is the same build as `main`; the workflow compiles it and
+runs the tests before deploying, so a page that fails its own negative controls
+never goes online.
 
 ```bash
 npm install
