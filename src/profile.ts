@@ -109,6 +109,38 @@ export function build(
   return { area, line, markers, slices, lowest, highest, distanceM };
 }
 
+/** The hatch that doubles every band, so no reading depends on hue.
+ *
+ *  The hatch is not decoration and it is not redundant: its direction is the
+ *  direction of the slope and its density is the steepness, which means the
+ *  drawing survives greyscale printing, colour blindness and a phone screen in
+ *  full sun. Roughness uses texture rather than slope, because it has no
+ *  direction to show.
+ */
+const HATCHES: readonly (readonly [string, string])[] = [
+  ['steep-up', '<path d="M0 8 L8 0" stroke="currentColor" stroke-width="1.6"/>'],
+  ['up', '<path d="M0 16 L16 0" stroke="currentColor" stroke-width="1.4"/>'],
+  ['down', '<path d="M0 0 L16 16" stroke="currentColor" stroke-width="1.4"/>'],
+  ['steep-down', '<path d="M0 0 L8 8" stroke="currentColor" stroke-width="1.6"/>'],
+  ['rough', '<path d="M0 8 L8 0 M0 0 L8 8" stroke="currentColor" stroke-width="1.2"/>'],
+  ['mixed', '<circle cx="4" cy="4" r="1.3" fill="currentColor"/>'],
+];
+
+/** Levels with no hatch are the quiet ones: flat ground and smooth line. */
+export function hatchDefs(): string {
+  return HATCHES.map(([level, mark]) => {
+    const size = level === 'up' || level === 'down' ? 16 : 8;
+    return (
+      `<pattern id="hatch-${level}" width="${size}" height="${size}" ` +
+      `patternUnits="userSpaceOnUse">${mark}</pattern>`
+    );
+  }).join('');
+}
+
+export function hasHatch(level: string): boolean {
+  return HATCHES.some(([name]) => name === level);
+}
+
 /** What a screen reader is told. A profile that says nothing to someone who
  *  cannot see it is decoration, and this one carries real information. */
 export function describe(profile: Profile): string {

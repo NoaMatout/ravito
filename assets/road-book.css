@@ -1,0 +1,593 @@
+/* ravito, carnet de route.
+ *
+ * A two-ink print job: one text ink and one printer's green on stock, with a
+ * night edition that inverts both for a start pen under a headtorch. Rules carry
+ * every division. There is no card and no box anywhere in this file, because a
+ * road book is ruled, not boxed.
+ *
+ * One typeface, Archivo variable, worked through its width axis: condensed for
+ * furniture, expanded for the one big figure, regular for prose. */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('archivo-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  --stock:      #e9ebe6;
+  --ink:        #101310;
+  --ink-2:      #4d564f;
+  --spot:       #1b5a41;
+  --spot-quiet: #cfd8d0;
+  --rule:       #bfc6bd;
+  --rule-mid:   #8d968c;
+
+  /* The measurement ramp. It lives inside the profile band and its legend and
+     nowhere else, so the two inks keep the rest of the page. */
+  --steep-up:   #a3311d;
+  --up:         #c2742a;
+  --level:      #7f877d;
+  --down:       #3d7aa4;
+  --steep-down: #204169;
+  --rough:      #a3311d;
+  --mixed:      #c2742a;
+  --smooth:     #5a7d5d;
+
+  --measure: 64rem;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --rule-w: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --stock:      #0a0c0b;
+    --ink:        #e7ebe8;
+    --ink-2:      #8e9a93;
+    --spot:       #5bd0a0;
+    --spot-quiet: #17251e;
+    --rule:       #272e2a;
+    --rule-mid:   #4a534d;
+
+    --steep-up:   #e2694d;
+    --up:         #e0a05a;
+    --level:      #7e8a82;
+    --down:       #61a8d4;
+    --steep-down: #3f74b4;
+    --rough:      #e2694d;
+    --mixed:      #e0a05a;
+    --smooth:     #77b07c;
+  }
+}
+
+* { box-sizing: border-box }
+
+html { -webkit-text-size-adjust: 100% }
+
+body {
+  margin: 0;
+  overflow-wrap: break-word;
+  background: var(--stock);
+  color: var(--ink);
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The parts of the page the browser draws still belong to the design. */
+::selection { background: var(--spot); color: var(--stock) }
+:focus-visible { outline: 2px solid var(--spot); outline-offset: 3px }
+* { caret-color: var(--spot) }
+@supports (scrollbar-color: red blue) {
+  * { scrollbar-color: var(--rule-mid) transparent; scrollbar-width: thin }
+}
+
+.sheet { max-width: var(--measure); margin: 0 auto; padding: 0 var(--gutter) 5rem }
+
+/* ---- running head ------------------------------------------------------- */
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.5rem, 4vw, 2.75rem) 0 0.5rem;
+  border-bottom: var(--rule-w) solid var(--ink);
+}
+.head b {
+  font-stretch: 78%;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.head span {
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--spot);
+  text-align: right;
+}
+
+.lede {
+  margin: 1.25rem 0 0;
+  max-width: 62ch;
+  color: var(--ink-2);
+}
+.lede b { color: var(--ink); font-weight: 600 }
+
+/* ---- furniture ---------------------------------------------------------- */
+
+.rubric {
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+.section { margin-top: clamp(2.25rem, 6vw, 3.5rem) }
+.section > .rubric + * { margin-top: 1rem }
+
+.note {
+  color: var(--ink-2);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  max-width: 70ch;
+  margin: 0.6rem 0 0;
+}
+.note cite { font-style: normal; color: var(--ink-2); opacity: 0.85 }
+
+/* ---- the form line, ruled the way a paper form asks a question ---------- */
+
+.form {
+  display: grid;
+  gap: clamp(1rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  margin-top: 1.75rem;
+}
+.field { display: flex; flex-direction: column }
+.field input {
+  order: -1;
+  font: inherit;
+  font-stretch: 88%;
+  font-weight: 500;
+  font-size: 1.35rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--rule-mid);
+  border-radius: 0;
+  padding: 0.15rem 0 0.3rem;
+  width: 100%;
+  transition: border-color 140ms ease-out;
+}
+.field input::placeholder { color: var(--rule-mid); font-weight: 400 }
+.field input:hover { border-bottom-color: var(--ink-2) }
+.field input:focus { outline: none; border-bottom: 3px solid var(--spot); padding-bottom: calc(0.3rem - 1px) }
+.field input:focus-visible { outline: 2px solid var(--spot); outline-offset: 4px }
+.field label {
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-top: 0.45rem;
+}
+.field small { font-size: 0.78rem; color: var(--ink-2); margin-top: 0.15rem; line-height: 1.4 }
+
+/* ---- the file control, the page's one primary action -------------------- */
+
+.intake { margin-top: clamp(1.75rem, 5vw, 2.75rem); position: relative }
+#drop {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-stretch: 78%;
+  font-weight: 600;
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stock);
+  background: var(--ink);
+  border: 0;
+  border-radius: 0;
+  padding: clamp(1rem, 3vw, 1.4rem) 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+#drop:hover, #drop.over { background: var(--spot) }
+.hint { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--ink-2) }
+#file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none }
+
+#course {
+  margin: 0.9rem 0 0;
+  font-stretch: 88%;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+#course b { color: var(--ink); font-weight: 600 }
+#course em { font-style: normal; color: var(--spot); font-weight: 600 }
+
+.error {
+  margin: 1rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 2px solid var(--steep-up);
+  color: var(--steep-up);
+  font-size: 0.9rem;
+}
+.error:empty { display: none }
+
+/* ---- the blank booklet, drawn rather than dashed ------------------------ */
+
+.blank { margin-top: 2rem; opacity: 0.55 }
+.blank svg { display: block; width: 100%; height: clamp(110px, 18vw, 150px) }
+.blank .row {
+  display: grid;
+  padding-bottom: 0.4rem;
+  grid-template-columns: 2.5rem 1fr 5rem 4rem 5rem;
+  gap: 1rem;
+  border-bottom: 1px solid var(--rule);
+  height: 2.4rem;
+  align-items: center;
+  font-stretch: 72%;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+
+/* ---- the estimate ------------------------------------------------------- */
+
+.estimate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1rem;
+  margin: 0.75rem 0 0;
+}
+.estimate b {
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: clamp(3rem, 1.5rem + 7vw, 6rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  font-feature-settings: 'tnum';
+}
+.estimate span {
+  font-stretch: 88%;
+  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.15rem);
+  color: var(--ink-2);
+}
+.estimate span i { font-style: normal; color: var(--ink); font-weight: 600 }
+
+.estimate--minor b { font-size: clamp(2rem, 1.3rem + 2.6vw, 3rem); font-stretch: 100% }
+.estimate--minor span { font-size: 0.95rem }
+
+.caution {
+  margin: 1.25rem 0 0;
+  padding: 0.9rem 0 0;
+  border-top: 2px solid var(--steep-up);
+  color: var(--ink);
+  font-size: 0.9rem;
+  max-width: 70ch;
+}
+.caution b { font-stretch: 78%; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700 }
+
+/* ---- the profile band --------------------------------------------------- */
+
+.readings { display: flex; gap: 0; margin: 0.9rem 0 0; border-bottom: 1px solid var(--rule) }
+.readings button {
+  font: inherit;
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding: 0.6rem 0.95rem 0.7rem;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 140ms ease-out;
+}
+.readings button:first-child { padding-left: 0 }
+.readings button:hover { color: var(--ink) }
+.readings button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink) }
+.readings button[aria-selected='true']::before { content: '\2014\00a0'; color: var(--spot) }
+
+.band { position: relative; margin-top: 1rem }
+.band svg {
+  display: block;
+  width: 100%;
+  height: clamp(150px, 24vw, 230px);
+  border-bottom: 2px solid var(--ink);
+}
+.band-line { fill: none; stroke: var(--ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round }
+.band-plain { fill: var(--spot); opacity: 0.16 }
+
+.slice-steep-up   { fill: var(--steep-up) }
+.slice-up         { fill: var(--up) }
+.slice-flat       { fill: var(--level) }
+.slice-down       { fill: var(--down) }
+.slice-steep-down { fill: var(--steep-down) }
+.slice-rough      { fill: var(--rough) }
+.slice-mixed      { fill: var(--mixed) }
+.slice-smooth     { fill: var(--smooth) }
+.slice { opacity: 0.82 }
+.hatch { opacity: 0.5 }
+
+/* Aid stations, named on the drawing rather than in a legend elsewhere. */
+.stops { position: absolute; inset: 0; pointer-events: none }
+.stop { position: absolute; top: 0; bottom: 0; width: 0; transform: translateX(-50%) }
+.stop i { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--ink); opacity: 0.3 }
+.stop u {
+  position: absolute;
+  bottom: -1px;
+  left: -4px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 7px solid var(--ink);
+}
+.stop.end b { transform: translateX(-88%) }
+.stop b {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-stretch: 72%;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: var(--stock);
+  background: var(--ink);
+  padding: 0.05rem 0.25rem;
+  line-height: 1.35;
+}
+
+.ruler {
+  position: relative;
+  height: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-stretch: 72%;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.ruler span { position: absolute; top: 0.25rem; transform: translateX(-50%); white-space: nowrap }
+.ruler span::before {
+  content: '';
+  position: absolute;
+  top: -0.35rem;
+  left: 50%;
+  width: 1px;
+  height: 0.3rem;
+  background: var(--rule-mid);
+}
+.ruler span:first-child { transform: none }
+.ruler span:first-child::before { left: 0 }
+.ruler span:last-child { transform: translateX(-100%) }
+.ruler span:last-child::before { left: auto; right: 0 }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-stretch: 78%;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.legend li { display: flex; align-items: center; gap: 0.45rem }
+.legend svg { width: 22px; height: 12px; display: block; flex: none }
+
+/* ---- the plan ----------------------------------------------------------- */
+
+.plan { width: 100%; border-collapse: collapse; margin-top: 0.9rem }
+.plan th, .plan td { padding: 0.55rem 0.5rem; text-align: right; border-bottom: 1px solid var(--rule) }
+.plan th:first-child, .plan td:first-child { padding-left: 0; text-align: left; width: 2.6rem }
+.plan th:nth-child(2), .plan td:nth-child(2) { text-align: left; width: auto }
+.plan th:last-child, .plan td:last-child { padding-right: 0 }
+.plan thead th {
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  border-bottom: 2px solid var(--ink);
+  white-space: nowrap;
+}
+.plan tbody td { font-stretch: 88%; font-variant-numeric: tabular-nums }
+.plan tbody tr:last-child td { border-bottom: 2px solid var(--ink) }
+.plan .leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
+.plan .name { font-stretch: 100%; font-weight: 500 }
+.plan tbody tr.longest td { font-weight: 700 }
+.plan tbody td:not(.name) { white-space: nowrap }
+.note b.leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
+
+/* A fourteen-leg plan cannot compress below its content on a phone. The table
+   scrolls inside its own region rather than dragging the whole sheet sideways,
+   which is the difference between a wide table and a broken page. */
+.scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 0 var(--gutter);
+  background:
+    linear-gradient(to right, var(--stock) 40%, transparent) left / 3rem 100% no-repeat local,
+    linear-gradient(to left, var(--stock) 40%, transparent) right / 3rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 24%, transparent), transparent) left / 1.2rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 24%, transparent), transparent) right / 1.2rem 100% no-repeat scroll;
+}
+.scroll:focus-visible { outline: 2px solid var(--spot); outline-offset: -2px }
+.scroll .plan { min-width: 30rem }
+
+/* Declared density steps: columns leave by name, the table never squeezes. */
+@media (max-width: 52rem) { .plan .drop-3 { display: none } }
+@media (max-width: 40rem) { .plan .drop-2 { display: none } }
+@media (max-width: 30rem) { .plan .drop-1 { display: none } }
+
+/* ---- the cut line and the pocket card ----------------------------------- */
+
+.cut {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: clamp(2.5rem, 7vw, 4rem) 0 0;
+  color: var(--ink-2);
+}
+.cut::after {
+  content: '';
+  flex: 1;
+  height: 0;
+  border-top: 2px dashed var(--rule-mid);
+}
+.cut button {
+  font: inherit;
+  font-stretch: 72%;
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+.cut button:hover { background: var(--ink); color: var(--stock) }
+.cut button svg { width: 14px; height: 14px; display: block; flex: none }
+
+.pocket {
+  margin-top: 1.25rem;
+  max-width: 34rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+  background: var(--spot-quiet);
+  transform-origin: 50% 0;
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cut button:hover ~ .pocket,
+.pocket:hover {
+  transform: rotate(-0.35deg) translateY(4px);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.45);
+}
+.pocket h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0 0 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--spot);
+  font-stretch: 88%;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.pocket h3 span { font-stretch: 112%; font-weight: 700; font-size: 1.1rem; color: var(--spot) }
+.pocket ol { margin: 0; padding: 0; list-style: none }
+.pocket li {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto auto;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-stretch: 88%;
+  font-size: 0.88rem;
+}
+.pocket li:last-child { border-bottom: 0 }
+.pocket li b { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
+.pocket li span:nth-child(2) { font-stretch: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pocket li u { text-decoration: none; text-underline-offset: 3px; min-width: 3.2rem; text-align: right }
+.pocket li i { font-style: normal; min-width: 4.5rem; text-align: right; color: var(--ink-2) }
+
+/* ---- the back matter ---------------------------------------------------- */
+
+.matter { columns: 2 19rem; column-gap: 2.5rem; margin-top: 1rem }
+.matter > * { break-inside: avoid }
+.matter dl { margin: 0 0 1.1rem }
+.matter dt {
+  font-stretch: 78%;
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.matter dd { margin: 0.2rem 0 0; color: var(--ink-2); font-size: 0.86rem; line-height: 1.5 }
+.matter dd cite { font-style: normal; color: var(--ink-2); opacity: 0.85; display: block; margin-top: 0.15rem }
+
+.colophon {
+  margin-top: clamp(2.5rem, 7vw, 4rem);
+  padding-top: 0.9rem;
+  border-top: var(--rule-w) solid var(--ink);
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  max-width: 70ch;
+}
+
+/* ---- the one authored moment: the sheet unfolds ------------------------- */
+
+@keyframes unfold {
+  from { opacity: 0; transform: translateY(10px) }
+  to   { opacity: 1; transform: none }
+}
+.settle > * { animation: unfold 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards }
+.settle > :nth-child(1) { animation-delay: 0ms }
+.settle > :nth-child(2) { animation-delay: 60ms }
+.settle > :nth-child(3) { animation-delay: 120ms }
+.settle > :nth-child(4) { animation-delay: 180ms }
+.settle > :nth-child(5) { animation-delay: 240ms }
+.settle > :nth-child(6) { animation-delay: 300ms }
+.band-line { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 900ms cubic-bezier(0.16, 1, 0.3, 1) 120ms forwards }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important }
+  .band-line { stroke-dasharray: none; stroke-dashoffset: 0 }
+}
+
+/* ---- print: the pocket card is the page --------------------------------- */
+
+@media print {
+  :root { --stock: #fff; --ink: #000; --ink-2: #444; --spot: #000; --spot-quiet: #fff; --rule: #999 }
+  body { font-size: 10pt }
+  .sheet { max-width: none; padding: 0 }
+  .lede, .form, .intake, .blank, .readings, .legend, .note, .caution,
+  .colophon, .cut button, .section:not(.section--band) { display: none }
+  .section--band { margin-top: 12pt }
+  .stop.end b { transform: translateX(-88%) }
+.stop b { font-size: 5pt }
+  .pocket { border: 1.5pt solid #000; padding: 8pt 10pt; transform: none; box-shadow: none }
+  .cut { margin-top: 10pt }
+  .band svg { height: 120pt }
+  .head { padding-top: 0 }
+}

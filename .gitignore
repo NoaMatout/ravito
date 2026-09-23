@@ -6,3 +6,7 @@ utmb_*.gpx
 
 # Outil de vérification local : charge un GPX dans la page sans clic.
 harness.html
+
+# Local verification pages, generated and not worth versioning.
+ov.html
+shot.html
