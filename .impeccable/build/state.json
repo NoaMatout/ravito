@@ -17,6 +17,10 @@
         {
           "at": "2026-09-23T15:58:00.375Z",
           "text": "No image generation on this harness, so the comp-led state machine does not apply; this run is code-led. Ambition lives in the FIRST VIEWPORT block and the pocket-card signature, audited by the finish reviewer."
+        },
+        {
+          "at": "2026-09-23T16:47:12.547Z",
+          "text": "Closed out of band. This run was code-led: no image generation exists on this harness, so the comp, spec, plate and hero gates have no subject and cannot be satisfied or honestly forced. Ambition was carried by the FIRST VIEWPORT block and the pocket-card signature in .impeccable/surfaces/index-html.md, and audited in behaviour by impeccable-finish-reviewer over two rounds: ten material fixes and two regressions, all scored resolved, disposition ship. DESIGN.md and .impeccable/design.json were written afterwards by impeccable-documenter from the built artifact. This record is closed, not abandoned."
         }
       ],
       "gate": null,

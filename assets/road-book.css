@@ -466,7 +466,6 @@ body {
 .scroll:focus-visible { outline: 2px solid var(--spot); outline-offset: -2px }
 .scroll .plan { min-width: 21rem }
 
-/* Declared density steps: columns leave by name, the table never squeezes. */
 /* Declared density steps, dropped in the order a runner needs least: the
    elapsed clock is a running total, ascent is context, and the aid station's
    distance survives on the pocket card below. Leg, name, time and carbohydrate
@@ -614,7 +613,7 @@ body {
   .colophon, .cut button, .section:not(.section--band) { display: none }
   .section--band { margin-top: 12pt }
   .stop.end b { transform: translateX(-88%) }
-.stop b { font-size: 5pt }
+  .stop b { font-size: 5pt }
   .pocket { border: 1.5pt solid #000; padding: 8pt 10pt; transform: none; box-shadow: none }
   .cut { margin-top: 10pt }
   .band svg { height: 120pt }
