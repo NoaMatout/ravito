@@ -85,9 +85,11 @@ Body mass, height and age are **not** asked for. No retained formula uses them:
 carbohydrate scales with duration. Asking for data that changes no output
 suggests a precision this tool does not have.
 
-It asks for your flat road pace, a GPX, and optionally the aid station
-distances from the race road-book, because a GPX does not contain them and they
-are what makes a plan a plan. On a trail you can only reload where there is a
+It asks for your flat road pace and a GPX. **Aid stations are read from the
+file** when it declares them as waypoints, which official race exports usually
+do: the first real one tested carried all fourteen, named, and they landed on
+the right kilometre. You can still type them, and typed values win, because you
+have the road-book and a waypoint sometimes describes something other than a
 stand.
 
 ## Run it yourself
@@ -124,7 +126,10 @@ synthetic test proves the algorithm and only a real track proves the constants.
   because GPS jitter inflates it the same way it inflates elevation. Not yet
   treated.
 - The terrain profile is one runner, one course.
-- Duration decay over very long efforts is not modelled.
+- **Duration decay is not modelled, and the page says so above six hours.**
+  Fed a 171 km course with 9 808 m of ascent, it answers 25h53. Over that
+  distance fatigue decides the finish, not gradient, so the figure is a floor
+  and the page labels it as one rather than answering confidently.
 - Tracks recorded by a barometric watch are cleaner than a GPS-only file
   exported by a race organiser. The tool has not been tested against the
   latter.

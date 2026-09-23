@@ -148,3 +148,29 @@ test('the real race fixture: the plan adds up on a real track', async () => {
   const summed = build(segs, [5000, 10000], road).reduce((t, l) => t + l.seconds, 0);
   assert.ok(Math.abs(summed - whole) < 1, `legs ${summed} vs whole ${whole}`);
 });
+
+test('aid stations are read from the file rather than retyped', async () => {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const path = new URL('../../utmb_174km_universal.gpx', import.meta.url).pathname;
+  if (!existsSync(path)) {
+    console.log('  SKIP: UTMB fixture missing');
+    return;
+  }
+  const { parseWaypoints, locateOnTrack } = await import('../src/gpx.js');
+  const xml = readFileSync(path, 'utf8');
+  const points = parse(xml);
+  const stations = locateOnTrack(points, parseWaypoints(xml));
+  assert.ok(stations.length >= 10, `expected the aid stations, got ${stations.length}`);
+  assert.ok(stations.every((s, i) => i === 0 || s.distanceM >= stations[i - 1].distanceM),
+    'stations must come back in order along the track');
+  const legs = build(segment(smooth(points)), stations, 1000 / 337);
+  assert.ok(legs.some((l) => l.label.includes('Courmayeur')),
+    'legs should carry the station names, not "aid 6"');
+});
+
+test('a waypoint far from the track is not treated as a stop', async () => {
+  const { locateOnTrack } = await import('../src/gpx.js');
+  const points = parse(gpxFrom([100, 100, 100, 100]));
+  const faraway = [{ name: 'somewhere else', lat: 48.85, lon: 2.35 }];
+  assert.equal(locateOnTrack(points, faraway).length, 0);
+});

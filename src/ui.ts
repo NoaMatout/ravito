@@ -1,6 +1,6 @@
 /** The only module that touches the document. It calculates nothing. */
 
-import { parse, GpxError, type Point } from './gpx.js';
+import { parse, parseWaypoints, locateOnTrack, GpxError, type Point } from './gpx.js';
 import { smooth, relief } from './elevation.js';
 import { segment, type Segment } from './segments.js';
 import { DEFAULT_TERRAIN, calibrate } from './pace.js';
@@ -8,8 +8,17 @@ import { build, durationOf, longestLeg } from './plan.js';
 import { needs, MISSING } from './nutrition.js';
 import { SOURCES } from './sources.js';
 
-type State = { points: Point[]; segments: Segment[]; name: string } | null;
+type State = {
+  points: Point[];
+  segments: Segment[];
+  name: string;
+  stations: { name: string; distanceM: number }[];
+} | null;
 let loaded: State = null;
+
+/** Beyond this, the model is extrapolating well past anything it was
+ *  checked against, and the page says so instead of answering confidently. */
+const VALIDATED_HOURS = 6;
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const value = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim();
@@ -38,12 +47,17 @@ function say(message: string, kind: 'error' | 'note' = 'error') {
 
 async function onFile(file: File) {
   try {
-    const points = smooth(parse(await file.text()));
-    loaded = { points, segments: segment(points), name: file.name };
+    const text = await file.text();
+    const points = smooth(parse(text));
+    const stations = locateOnTrack(points, parseWaypoints(text));
+    loaded = { points, segments: segment(points), name: file.name, stations };
     const { ascent, descent } = relief(points);
     $('course').innerHTML =
       `<strong>${file.name}</strong> · ${km(points[points.length - 1].distance)}` +
-      ` · D+ ${Math.round(ascent)} m · D- ${Math.round(descent)} m`;
+      ` · D+ ${Math.round(ascent)} m · D- ${Math.round(descent)} m` +
+      (stations.length
+        ? ` · <strong>${stations.length} aid stations read from the file</strong>`
+        : '');
     say('', 'note');
     render();
   } catch (e) {
@@ -72,11 +86,14 @@ function render() {
     calibrationNote = `terrain factor: ${factor.toFixed(2)}, measured from the time you gave`;
   }
 
-  const stations = value('aid')
+  // Typed kilometres win over the file: the runner has the road-book, and a
+  // file's waypoints sometimes describe something other than a stand.
+  const typed = value('aid')
     .split(/[,;\s]+/)
     .filter(Boolean)
-    .map((s) => Number(s.replace(',', '.')) * 1000)
-    .filter((m) => Number.isFinite(m));
+    .map((s) => ({ distanceM: Number(s.replace(',', '.')) * 1000 }))
+    .filter((a) => Number.isFinite(a.distanceM));
+  const stations = typed.length ? typed : loaded.stations;
 
   const legs = build(loaded.segments, stations, speed, DEFAULT_TERRAIN, factor);
   const total = durationOf(loaded.segments, speed, DEFAULT_TERRAIN, factor);
@@ -103,13 +120,20 @@ function render() {
     <p class="big">${hhmm(total)}<span class="range">, between ${hhmm(low)} and ${hhmm(high)}</span></p>
     <p class="note">${calibrationNote}. The range is wide because it covers something
       this tool has not measured about you.</p>
+    ${total > VALIDATED_HOURS * 3600 ? `<p class="warn"><strong>Beyond this tool's
+      validated range.</strong> The terrain profile was measured on a race of under
+      three hours, and there is no fatigue term in the model. Over
+      ${Math.round(total / 3600)} hours, fatigue is what decides the finish time, so
+      read this as a floor rather than as a prediction.</p>` : ''}
 
     <h2>Carry, leg by leg</h2>
-    <table>
-      <thead><tr><th>leg</th><th>to</th><th>time</th><th>D+</th>
-        <th>carbohydrate</th><th>elapsed</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="scroll" tabindex="0" role="region" aria-label="Carry, leg by leg">
+      <table>
+        <thead><tr><th>leg</th><th>to</th><th>time</th><th>D+</th>
+          <th>carbohydrate</th><th>elapsed</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
     ${worst ? `<p class="note">Longest leg: ${worst.label}, ${hhmm(worst.seconds)}.
       That is the one that decides your pack and flask capacity.</p>` : ''}
 

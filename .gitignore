@@ -1,3 +1,5 @@
 node_modules/
 dist/
 .DS_Store
+# Trace d organisateur, non redistribuee. Le test la saute si elle est absente.
+utmb_*.gpx

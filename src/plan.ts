@@ -10,6 +10,9 @@ import type { Segment } from './segments.js';
 import { speedAt, type TerrainProfile, DEFAULT_TERRAIN } from './pace.js';
 import { CARBOHYDRATE_PER_HOUR } from './nutrition.js';
 
+/** An aid station, from the file's waypoints or typed by the runner. */
+export type AidStation = { readonly distanceM: number; readonly name?: string };
+
 export type Leg = {
   readonly index: number;
   readonly fromM: number;
@@ -39,13 +42,17 @@ export function durationOf(
 /** Split the course at the declared aid stations, in metres from the start. */
 export function build(
   segments: readonly Segment[],
-  aidStationsM: readonly number[],
+  aidStations: readonly (AidStation | number)[],
   roadFlatSpeed: number,
   terrain: TerrainProfile = DEFAULT_TERRAIN,
   terrainFactor = 1,
 ): Leg[] {
   const finish = segments.length ? segments[segments.length - 1].endM : 0;
-  const cuts = [...new Set(aidStationsM.filter((m) => m > 0 && m < finish))].sort((a, b) => a - b);
+  const declared = aidStations
+    .map((a) => (typeof a === 'number' ? { distanceM: a } : a))
+    .filter((a) => a.distanceM > 0 && a.distanceM < finish)
+    .sort((a, b) => a.distanceM - b.distanceM);
+  const cuts = declared.map((a) => a.distanceM);
   const bounds = [0, ...cuts, finish];
 
   const legs: Leg[] = [];
@@ -67,7 +74,10 @@ export function build(
       index: i + 1,
       fromM,
       toM,
-      label: i + 1 === bounds.length - 1 ? 'finish' : `aid ${i + 1}`,
+      label:
+        i + 1 === bounds.length - 1
+          ? 'finish'
+          : declared[i]?.name || `aid ${i + 1}`,
       seconds,
       ascent: inLeg.reduce((a, s) => a + s.ascent, 0),
       carbsLow: Math.round(CARBOHYDRATE_PER_HOUR.low * hours),

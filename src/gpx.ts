@@ -30,6 +30,63 @@ export function haversine(a: Point | Omit<Point, 'distance'>, b: Point | Omit<Po
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/** A named point declared in the file, not part of the track itself. */
+export type Waypoint = {
+  readonly name: string;
+  readonly lat: number;
+  readonly lon: number;
+};
+
+const WPT = /<wpt[^>]*\blat="([-\d.]+)"[^>]*\blon="([-\d.]+)"[^>]*>([\s\S]*?)<\/wpt>/g;
+const NAME = /<name>([\s\S]*?)<\/name>/;
+
+/** Waypoints declared in the file.
+ *
+ * An official race GPX usually carries its aid stations here. Making the
+ * runner retype kilometres the file already contains was a design mistake:
+ * the first real race file tested made that obvious.
+ */
+export function parseWaypoints(xml: string): Waypoint[] {
+  const found: Waypoint[] = [];
+  WPT.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = WPT.exec(xml)) !== null) {
+    const name = NAME.exec(m[3] ?? '');
+    if (!name) continue;
+    const lat = Number(m[1]);
+    const lon = Number(m[2]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    found.push({ name: name[1].trim().replace(/<[^>]*>/g, ''), lat, lon });
+  }
+  return found;
+}
+
+/** Where each waypoint falls along the track, in metres from the start.
+ *
+ * A waypoint sits near the track, not on one of its points, so it is matched
+ * to the nearest recorded point. One further than 500 m from the track is
+ * dropped: it describes something else, not a point of passage.
+ */
+export function locateOnTrack(
+  points: readonly Point[],
+  waypoints: readonly Waypoint[],
+  toleranceM = 500,
+): { name: string; distanceM: number }[] {
+  const located = waypoints.flatMap((w) => {
+    let best = Infinity;
+    let at = 0;
+    for (const p of points) {
+      const d = haversine(p, { lat: w.lat, lon: w.lon, elevation: 0 });
+      if (d < best) {
+        best = d;
+        at = p.distance;
+      }
+    }
+    return best <= toleranceM ? [{ name: w.name, distanceM: at }] : [];
+  });
+  return located.sort((a, b) => a.distanceM - b.distanceM);
+}
+
 export class GpxError extends Error {}
 
 export function parse(xml: string): Point[] {
