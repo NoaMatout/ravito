@@ -6,6 +6,7 @@
  */
 
 import type { Point } from './gpx.js';
+import type { Band } from './terrain.js';
 
 export const VIEW_WIDTH = 1000;
 export const VIEW_HEIGHT = 180;
@@ -14,10 +15,16 @@ export const SAMPLES = 480;
 
 export type Marker = { readonly name: string; readonly x: number; readonly y: number };
 
+/** One band of a reading, as a filled slice of the area under the curve.
+ *  Colouring the ground the runner covers reads better than colouring the sky
+ *  above it: the drawing stays one shape instead of becoming a barcode. */
+export type Slice = { readonly d: string; readonly level: string };
+
 export type Profile = {
   readonly area: string;
   readonly line: string;
   readonly markers: readonly Marker[];
+  readonly slices: readonly Slice[];
   readonly lowest: number;
   readonly highest: number;
   readonly distanceM: number;
@@ -39,9 +46,10 @@ function sample(points: readonly Point[], count: number): Point[] {
 export function build(
   points: readonly Point[],
   stations: readonly { name: string; distanceM: number }[] = [],
+  reading: readonly Band[] = [],
 ): Profile {
   if (points.length < 2) {
-    return { area: '', line: '', markers: [], lowest: 0, highest: 0, distanceM: 0 };
+    return { area: '', line: '', markers: [], slices: [], lowest: 0, highest: 0, distanceM: 0 };
   }
   const distanceM = points[points.length - 1].distance || 1;
   const elevations = points.map((p) => p.elevation);
@@ -68,7 +76,37 @@ export function build(
     return { name: s.name, x: xOf(nearest.distance), y: yOf(nearest.elevation) };
   });
 
-  return { area, line, markers, lowest, highest, distanceM };
+  // Elevation read off the drawn samples, so a slice's edge sits exactly on
+  // the line rather than a little above or below it.
+  const elevationAt = (d: number): number => {
+    if (d <= drawn[0].distance) return drawn[0].elevation;
+    const last = drawn[drawn.length - 1];
+    if (d >= last.distance) return last.elevation;
+    let i = 1;
+    while (i < drawn.length - 1 && drawn[i].distance < d) i += 1;
+    const a = drawn[i - 1];
+    const b = drawn[i];
+    const t = (d - a.distance) / (b.distance - a.distance || 1);
+    return a.elevation + (b.elevation - a.elevation) * t;
+  };
+
+  const point = (d: number, e: number) => `${xOf(d).toFixed(1)} ${yOf(e).toFixed(1)}`;
+
+  const slices = reading.map((b) => {
+    const inside = drawn.filter((p) => p.distance > b.from && p.distance < b.to);
+    const along = [
+      point(b.from, elevationAt(b.from)),
+      ...inside.map((p) => point(p.distance, p.elevation)),
+      point(b.to, elevationAt(b.to)),
+    ];
+    const d =
+      `M${along[0]} ` +
+      along.slice(1).map((c) => `L${c}`).join(' ') +
+      ` L${xOf(b.to).toFixed(1)} ${VIEW_HEIGHT} L${xOf(b.from).toFixed(1)} ${VIEW_HEIGHT} Z`;
+    return { d, level: b.level };
+  });
+
+  return { area, line, markers, slices, lowest, highest, distanceM };
 }
 
 /** What a screen reader is told. A profile that says nothing to someone who

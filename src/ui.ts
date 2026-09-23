@@ -8,18 +8,40 @@ import { build, durationOf, longestLeg } from './plan.js';
 import { needs, MISSING } from './nutrition.js';
 import { SOURCES } from './sources.js';
 import * as profile from './profile.js';
+import { bands, type Band, type Reading } from './terrain.js';
 
 type State = {
   points: Point[];
   segments: Segment[];
   name: string;
   stations: { name: string; distanceM: number }[];
+  // The readings depend on the course alone, so they are computed once when the
+  // file lands rather than on every keystroke in the pace field.
+  readings: Record<Reading, Band[]>;
 } | null;
 let loaded: State = null;
 
 /** Beyond this, the model is extrapolating well past anything it was
  *  checked against, and the page says so instead of answering confidently. */
 const VALIDATED_HOURS = 6;
+
+let reading: Reading = 'elevation';
+
+const READINGS: readonly { id: Reading; label: string; note: string }[] = [
+  { id: 'elevation', label: 'Profile', note: '' },
+  {
+    id: 'gradient',
+    label: 'Gradient',
+    note: 'Bands are the average gradient over 250 m: steep is beyond 15 percent either way.',
+  },
+  {
+    id: 'roughness',
+    label: 'Roughness',
+    note:
+      'How much the line twists and the gradient changes, over 250 m. This is geometry, ' +
+      'not technicality: rocks, roots and mud leave no trace in a GPX, and nothing here can see them.',
+  },
+];
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const value = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim();
@@ -51,7 +73,17 @@ async function onFile(file: File) {
     const text = await file.text();
     const points = smooth(parse(text));
     const stations = locateOnTrack(points, parseWaypoints(text));
-    loaded = { points, segments: segment(points), name: file.name, stations };
+    loaded = {
+      points,
+      segments: segment(points),
+      name: file.name,
+      stations,
+      readings: {
+        elevation: [],
+        gradient: bands(points, 'gradient'),
+        roughness: bands(points, 'roughness'),
+      },
+    };
     const { ascent, descent } = relief(points);
     $('course').innerHTML =
       `<strong>${file.name}</strong> · ${km(points[points.length - 1].distance)}` +
@@ -103,14 +135,20 @@ function render() {
   const food = needs(total);
   const worst = longestLeg(legs);
 
-  const shape = profile.build(loaded.points, stations.every((s) => 'name' in s)
+  const named = stations.every((s) => 'name' in s)
     ? (stations as { name: string; distanceM: number }[])
-    : []);
+    : [];
+  const shape = profile.build(loaded.points, named, loaded.readings[reading]);
+  const current = READINGS.find((r) => r.id === reading) ?? READINGS[0];
   const svg = `
     <svg class="profile" viewBox="0 0 ${profile.VIEW_WIDTH} ${profile.VIEW_HEIGHT}"
          preserveAspectRatio="none" role="img"
          aria-label="${profile.describe(shape)}">
-      <path class="profile-area" d="${shape.area}"/>
+      ${shape.slices.length
+        ? shape.slices
+            .map((s) => `<path class="band band-${s.level}" d="${s.d}"/>`)
+            .join('')
+        : `<path class="profile-area" d="${shape.area}"/>`}
       <path class="profile-line" d="${shape.line}"/>
       ${shape.markers
         .map(
@@ -149,7 +187,14 @@ function render() {
       read this as a floor rather than as a prediction.</p>` : ''}
 
     <h2>Profile</h2>
+    <div class="tabs" role="tablist">
+      ${READINGS.map(
+        (r) => `<button role="tab" data-reading="${r.id}"
+                  aria-selected="${r.id === reading}">${r.label}</button>`,
+      ).join('')}
+    </div>
     ${svg}
+    ${current.note ? `<p class="note">${current.note}</p>` : ''}
 
     <h2>Carry, leg by leg</h2>
     <div class="scroll" tabindex="0" role="region" aria-label="Carry, leg by leg">
@@ -201,6 +246,13 @@ export function start() {
   for (const id of ['pace', 'aid', 'known']) {
     $(id).addEventListener('input', render);
   }
+  // The tabs are rebuilt on every render, so the listener lives on the parent.
+  $('plan').addEventListener('click', (e) => {
+    const chosen = (e.target as HTMLElement).closest<HTMLElement>('[data-reading]');
+    if (!chosen) return;
+    reading = chosen.dataset.reading as Reading;
+    render();
+  });
 }
 
 start();

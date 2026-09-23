@@ -3,3 +3,6 @@ dist/
 .DS_Store
 # Trace d organisateur, non redistribuee. Le test la saute si elle est absente.
 utmb_*.gpx
+
+# Outil de vérification local : charge un GPX dans la page sans clic.
+harness.html
