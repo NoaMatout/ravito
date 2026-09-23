@@ -37,6 +37,45 @@ jobs:
           mkdir -p _site
           cp index.html _site/
           cp -r dist _site/dist
+          cp -r assets _site/assets
+
+      # La publication precedente etait verte et la page etait nue : assets/
+      # n'etait pas copie, donc la feuille de style et la police renvoyaient
+      # 404 sans que rien n'echoue. Une etape qui reussit toujours ne prouve
+      # rien, donc celle-ci relit la page et exige chaque fichier qu'elle
+      # reference. Le controle negatif est teste juste apres.
+      - name: Verifier que la page a tout ce qu'elle appelle
+        run: |
+          set -eu
+          manque=0
+          for f in $(grep -oE '(href|src)="\./[^"]+"' index.html \
+                     | sed -E 's/.*"\.\/([^"]+)"/\1/' | sort -u); do
+            if [ -e "_site/$f" ]; then
+              echo "  ok       $f"
+            else
+              echo "  MANQUANT $f"
+              manque=1
+            fi
+          done
+          if [ "$manque" -ne 0 ]; then
+            echo "La page reference des fichiers absents du site assemble." >&2
+            exit 1
+          fi
+
+      - name: Prouver que la verification sait echouer
+        run: |
+          set -eu
+          rm -rf _controle && cp -r _site _controle
+          rm -f _controle/assets/road-book.css
+          if for f in $(grep -oE '(href|src)="\./[^"]+"' index.html \
+                        | sed -E 's/.*"\.\/([^"]+)"/\1/' | sort -u); do
+               [ -e "_controle/$f" ] || exit 1
+             done; then
+            echo "Le controle negatif n'a rien detecte : la verification est inutile." >&2
+            exit 1
+          fi
+          echo "  la verification detecte bien un fichier manquant"
+          rm -rf _controle
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

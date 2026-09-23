@@ -13,3 +13,7 @@ shot.html
 
 # Captures de revue : régénérables par tools/shot.mjs, et lourdes.
 .impeccable/review/
+
+# Assemblage local du site, reproduit par le workflow.
+_site/
+_controle/
