@@ -174,3 +174,29 @@ test('a waypoint far from the track is not treated as a stop', async () => {
   const faraway = [{ name: 'somewhere else', lat: 48.85, lon: 2.35 }];
   assert.equal(locateOnTrack(points, faraway).length, 0);
 });
+
+test('the profile spans the full width and puts high ground at the top', async () => {
+  const profile = await import('../src/profile.js');
+  const points = parse(gpxFrom([100, 300, 100]));
+  const shape = profile.build(points);
+  assert.match(shape.line, /^M0(\.0)? /, 'the drawing must start at the left edge');
+  assert.match(shape.line, new RegExp(`L${profile.VIEW_WIDTH}(\\.0)? `), 'and reach the right edge');
+  const ys = [...shape.line.matchAll(/[ML][\d.]+ ([\d.]+)/g)].map((m) => Number(m[1]));
+  assert.ok(ys[0] > ys[Math.floor(ys.length / 2)], 'the summit must sit above the start');
+  assert.equal(shape.highest, 300);
+  assert.equal(shape.lowest, 100);
+});
+
+test('a dead flat track does not divide by zero', async () => {
+  const profile = await import('../src/profile.js');
+  const shape = profile.build(parse(gpxFrom([200, 200, 200, 200])));
+  assert.ok(shape.line.length > 0, 'a flat course still draws a line');
+  assert.ok(!shape.line.includes('NaN'), `no NaN in the path: ${shape.line.slice(0, 60)}`);
+});
+
+test('the profile carries a description for a screen reader', async () => {
+  const profile = await import('../src/profile.js');
+  const shape = profile.build(parse(gpxFrom([100, 400, 150])), [{ name: 'x', distanceM: 25 }]);
+  const text = profile.describe(shape);
+  assert.ok(text.includes('400') && text.includes('aid station'), text);
+});

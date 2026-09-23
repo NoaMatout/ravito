@@ -7,6 +7,7 @@ import { DEFAULT_TERRAIN, calibrate } from './pace.js';
 import { build, durationOf, longestLeg } from './plan.js';
 import { needs, MISSING } from './nutrition.js';
 import { SOURCES } from './sources.js';
+import * as profile from './profile.js';
 
 type State = {
   points: Point[];
@@ -102,6 +103,27 @@ function render() {
   const food = needs(total);
   const worst = longestLeg(legs);
 
+  const shape = profile.build(loaded.points, stations.every((s) => 'name' in s)
+    ? (stations as { name: string; distanceM: number }[])
+    : []);
+  const svg = `
+    <svg class="profile" viewBox="0 0 ${profile.VIEW_WIDTH} ${profile.VIEW_HEIGHT}"
+         preserveAspectRatio="none" role="img"
+         aria-label="${profile.describe(shape)}">
+      <path class="profile-area" d="${shape.area}"/>
+      <path class="profile-line" d="${shape.line}"/>
+      ${shape.markers
+        .map(
+          (m) => `<line class="profile-mark" x1="${m.x.toFixed(1)}" y1="0"
+                        x2="${m.x.toFixed(1)}" y2="${profile.VIEW_HEIGHT}"/>
+                  <circle class="profile-dot" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="5"/>`,
+        )
+        .join('')}
+    </svg>
+    <p class="note">${Math.round(shape.lowest)} m at the lowest point,
+       ${Math.round(shape.highest)} m at the highest.
+       ${shape.markers.length ? 'Marks are the aid stations.' : ''}</p>`;
+
   const rows = legs
     .map(
       (l) => `<tr>
@@ -125,6 +147,9 @@ function render() {
       three hours, and there is no fatigue term in the model. Over
       ${Math.round(total / 3600)} hours, fatigue is what decides the finish time, so
       read this as a floor rather than as a prediction.</p>` : ''}
+
+    <h2>Profile</h2>
+    ${svg}
 
     <h2>Carry, leg by leg</h2>
     <div class="scroll" tabindex="0" role="region" aria-label="Carry, leg by leg">

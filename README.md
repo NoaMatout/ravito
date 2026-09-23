@@ -22,6 +22,10 @@ aid 2    10.0 km   0h54   428 m   54 to 81 g
 finish   16.8 km   1h00   409 m   60 to 90 g
 ```
 
+The profile is inline SVG, not an image: it scales without loss, carries a text
+alternative for a screen reader, costs no request and no library, and the
+markup stays selectable. Aid stations read from the file are marked on it.
+
 ## Two things it gets right that most do not
 
 **Total ascent.** Summing every positive elevation difference overstates it,
