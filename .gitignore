@@ -10,3 +10,6 @@ harness.html
 # Local verification pages, generated and not worth versioning.
 ov.html
 shot.html
+
+# Captures de revue : régénérables par tools/shot.mjs, et lourdes.
+.impeccable/review/

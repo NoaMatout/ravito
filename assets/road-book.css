@@ -233,16 +233,35 @@ body {
 
 /* ---- the blank booklet, drawn rather than dashed ------------------------ */
 
-.blank { margin-top: 2rem; opacity: 0.55 }
-.blank svg { display: block; width: 100%; height: clamp(110px, 18vw, 150px) }
+.blank { margin-top: 2rem; opacity: 0.4 }
+.blank svg {
+  display: block;
+  width: 100%;
+  height: clamp(130px, 20vw, 190px);
+  border-bottom: 2px solid var(--ink);
+}
+.blank .row > span:first-child { flex: 0 0 2.5rem }
+.blank .row > span:nth-child(2) { flex: 1 1 auto }
+.blank .row > span:nth-child(n+3) { flex: 0 0 auto; min-width: 3rem; text-align: right }
+.ghost-fill { fill: var(--ink); opacity: 0.1 }
+.ghost-line { fill: none; stroke: var(--ink); stroke-width: 1.5; vector-effect: non-scaling-stroke;
+              stroke-linejoin: round; stroke-dasharray: 5 5 }
+.ghost-rule {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0 1.1rem;
+  font-stretch: 72%;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
 .blank .row {
-  display: grid;
+  display: flex;
+  align-items: center;
   padding-bottom: 0.4rem;
-  grid-template-columns: 2.5rem 1fr 5rem 4rem 5rem;
-  gap: 1rem;
+  gap: 0.9rem;
   border-bottom: 1px solid var(--rule);
   height: 2.4rem;
-  align-items: center;
   font-stretch: 72%;
   font-size: 0.68rem;
   letter-spacing: 0.12em;
@@ -422,11 +441,12 @@ body {
   white-space: nowrap;
 }
 .plan tbody td { font-stretch: 88%; font-variant-numeric: tabular-nums }
-.plan tbody tr:last-child td { border-bottom: 2px solid var(--ink) }
+.plan tbody tr:last-child td { border-bottom: 4px double var(--ink) }
 .plan .leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
 .plan .name { font-stretch: 100%; font-weight: 500 }
 .plan tbody tr.longest td { font-weight: 700 }
 .plan tbody td:not(.name) { white-space: nowrap }
+.note b { font-weight: 600; color: var(--ink) }
 .note b.leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
 
 /* A fourteen-leg plan cannot compress below its content on a phone. The table
@@ -444,12 +464,20 @@ body {
     radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 24%, transparent), transparent) right / 1.2rem 100% no-repeat scroll;
 }
 .scroll:focus-visible { outline: 2px solid var(--spot); outline-offset: -2px }
-.scroll .plan { min-width: 30rem }
+.scroll .plan { min-width: 21rem }
 
 /* Declared density steps: columns leave by name, the table never squeezes. */
-@media (max-width: 52rem) { .plan .drop-3 { display: none } }
-@media (max-width: 40rem) { .plan .drop-2 { display: none } }
-@media (max-width: 30rem) { .plan .drop-1 { display: none } }
+/* Declared density steps, dropped in the order a runner needs least: the
+   elapsed clock is a running total, ascent is context, and the aid station's
+   distance survives on the pocket card below. Leg, name, time and carbohydrate
+   never leave, because they are the answer to the question. */
+@media (max-width: 52rem) { .drop-3 { display: none } }
+@media (max-width: 40rem) { .drop-2 { display: none } }
+@media (max-width: 30rem) {
+  .drop-1 { display: none }
+  .pocket li { grid-template-columns: 2.4rem 1fr auto auto }
+  .pocket li .name { display: none }
+}
 
 /* ---- the cut line and the pocket card ----------------------------------- */
 
@@ -514,11 +542,12 @@ body {
   color: var(--ink);
 }
 .pocket h3 span { font-stretch: 112%; font-weight: 700; font-size: 1.1rem; color: var(--spot) }
+.pocket-note { margin: -0.3rem 0 0.7rem; font-size: 0.8rem; color: var(--ink-2); line-height: 1.45 }
 .pocket ol { margin: 0; padding: 0; list-style: none }
 .pocket li {
   display: grid;
-  grid-template-columns: 2.4rem 1fr auto auto;
-  gap: 0.75rem;
+  grid-template-columns: 2.4rem 1fr auto auto auto;
+  gap: 0.7rem;
   padding: 0.35rem 0;
   border-bottom: 1px solid var(--rule);
   font-stretch: 88%;
@@ -526,8 +555,8 @@ body {
 }
 .pocket li:last-child { border-bottom: 0 }
 .pocket li b { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
-.pocket li span:nth-child(2) { font-stretch: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.pocket li u { text-decoration: none; text-underline-offset: 3px; min-width: 3.2rem; text-align: right }
+.pocket li .name { font-stretch: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pocket li u { text-decoration: none; min-width: 3.4rem; text-align: right }
 .pocket li i { font-style: normal; min-width: 4.5rem; text-align: right; color: var(--ink-2) }
 
 /* ---- the back matter ---------------------------------------------------- */

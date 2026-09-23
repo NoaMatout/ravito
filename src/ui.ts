@@ -195,17 +195,21 @@ function drawPlan(legs: readonly Leg[], worst: Leg | null): string {
       (l, i) => `<tr${l === worst ? ' class="longest"' : ''}>
         <td class="leg">R${i + 1}</td>
         <td class="name">${l.label}</td>
-        <td>${km(l.toM)}</td>
+        <td class="drop-1">${km(l.toM)}</td>
         <td>${hhmm(l.seconds)}</td>
         <td class="drop-2">${Math.round(l.ascent)} m</td>
         <td>${l.carbsLow}&ndash;${l.carbsHigh} g</td>
-        <td class="drop-1">${hhmm(l.cumulativeSeconds)}</td>
+        <td class="drop-3">${hhmm(l.cumulativeSeconds)}</td>
       </tr>`,
     )
     .join('');
 
   const longest = worst ? `R${legs.indexOf(worst) + 1}` : '';
-  return `<p class="note">One row per leg between two aid stations.${
+  return `<p class="note">One row per leg between two aid stations.
+  <span class="drop-1">From the start: <b>at km</b><span class="drop-3">,
+    <b>elapsed</b></span>.</span>
+  For the leg alone: <b>time</b><span class="drop-2">, <b>D+</b></span>,
+  <b>carbs</b>.${
     longest
       ? ` <b class="leg">${longest}</b> is the longest, and it is the leg that
           decides your pack and flask capacity.`
@@ -214,15 +218,20 @@ function drawPlan(legs: readonly Leg[], worst: Leg | null): string {
   <div class="scroll" tabindex="0" role="region" aria-label="Carry, leg by leg">
     <table class="plan">
       <thead><tr>
-        <th>leg</th><th>to</th><th>km</th><th>time</th>
-        <th class="drop-2">D+</th><th>carbs</th><th class="drop-1">elapsed</th>
+        <th>leg</th><th>to</th><th class="drop-1">at km</th><th>time</th>
+        <th class="drop-2">D+</th><th>carbs</th><th class="drop-3">elapsed</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;
 }
 
-function drawPocket(legs: readonly Leg[], name: string, total: number): string {
+function drawPocket(
+  legs: readonly Leg[],
+  name: string,
+  total: number,
+  beyond: boolean,
+): string {
   return `
     <div class="cut">
       <button id="card" type="button">
@@ -236,10 +245,16 @@ function drawPocket(legs: readonly Leg[], name: string, total: number): string {
     </div>
     <section class="pocket" aria-label="Pocket card">
       <h3>${name}<span>${hhmm(total)}</span></h3>
+      <p class="pocket-note">Between ${hhmm(total * 0.9)} and ${hhmm(total * 1.15)}.${
+        beyond
+          ? ' Outside this tool&rsquo;s validated range: no fatigue term, so read the time as a floor.'
+          : ''
+      }</p>
       <ol>${legs
         .map(
-          (l, i) => `<li><b>R${i + 1}</b><span>${l.label}</span>
-            <u>${hhmm(l.seconds)}</u><i>${l.carbsLow}&ndash;${l.carbsHigh} g</i></li>`,
+          (l, i) => `<li><b>R${i + 1}</b><span class="name">${l.label}</span>
+            <u>${km(l.toM)}</u><u>${hhmm(l.seconds)}</u>
+            <i>${l.carbsLow}&ndash;${l.carbsHigh} g</i></li>`,
         )
         .join('')}</ol>
     </section>`;
@@ -332,7 +347,7 @@ function render() {
       <p class="note">${food.note}.<br><cite>${food.source}</cite></p>
     </section>
 
-    ${drawPocket(legs, loaded.name, total)}
+    ${drawPocket(legs, loaded.name, total, total > VALIDATED_HOURS * 3600)}
 
     <section class="section">
       <h2 class="rubric">What this plan does not include</h2>
