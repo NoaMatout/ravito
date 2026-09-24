@@ -38,8 +38,15 @@
   --mixed:      #c2742a;
   --smooth:     #5a7d5d;
 
-  --measure: 64rem;
-  --gutter: clamp(1.25rem, 4vw, 3rem);
+  /* La feuille occupe la largeur de l'ecran, mais la prose garde sa mesure :
+     une ligne de texte qui traverse un grand ecran ne se lit pas, l'oeil perd
+     le debut de la ligne suivante. La largeur profite au dessin et au tableau,
+     qui en ont besoin, pas au texte, qui n'en a que faire. */
+  --measure: 84rem;
+  --prose: 70ch;
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  /* Largeur de la barre de defilement, mesuree par le navigateur lui-meme. */
+  --barre: 0px;
   --rule-w: 3px;
   --slip: 16rem;
 
@@ -106,6 +113,22 @@ body {
 
 .sheet { max-width: var(--measure); margin: 0 auto; padding: 0 var(--gutter) 5rem }
 
+/* Tout ce qui est de la prose reste a la mesure, quelle que soit la feuille. */
+.lede, .note, .caution, .hint, #course, .error, .colophon, .plan caption { max-width: var(--prose) }
+
+/* Le bandeau de profil sort de la feuille et va d'un bord de l'ecran a l'autre :
+   c'est le seul element qui gagne a chaque pixel, un parcours de 171 km dans
+   64 rem est un trait ecrase. On mesure en pourcentage du conteneur plutot
+   qu'en vw, parce que vw compte la barre de defilement et ajoute un debordement
+   horizontal sur toute la page.
+
+   Le pilote --bord permet de revenir a la feuille sans toucher au reste. */
+.section--band { --bord: calc(50% - 50vw + var(--barre) / 2) }
+.section--band .band,
+.section--band .ruler { margin-inline: var(--bord) }
+.section--band .stops,
+.section--band .levels { inset: 0 var(--gutter) }
+
 /* ---- running head ------------------------------------------------------- */
 
 .head {
@@ -135,7 +158,7 @@ body {
 
 .lede {
   margin: 1.25rem 0 0;
-  max-width: 62ch;
+  max-width: var(--prose);
   color: var(--ink-2);
 }
 .lede b { color: var(--ink); font-weight: 600 }
@@ -160,7 +183,7 @@ body {
   color: var(--ink-2);
   font-size: var(--t-note);
   line-height: 1.5;
-  max-width: 70ch;
+  max-width: var(--prose);
   margin: 0.6rem 0 0;
 }
 .note cite { font-style: normal; color: var(--ink-2); opacity: 0.85 }
@@ -319,7 +342,7 @@ body {
   border-top: 2px solid var(--steep-up);
   color: var(--ink);
   font-size: var(--t-note);
-  max-width: 70ch;
+  max-width: var(--prose);
 }
 .caution b { font-stretch: 78%; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700 }
 
@@ -502,9 +525,9 @@ body {
   height: 0.3rem;
   background: var(--rule-mid);
 }
-.ruler span:first-child { transform: none }
+.ruler span:first-child { transform: none; padding-left: .4rem }
 .ruler span:first-child::before { left: 0 }
-.ruler span:last-child { transform: translateX(-100%) }
+.ruler span:last-child { transform: translateX(-100%); padding-right: .4rem }
 .ruler span:last-child::before { left: auto; right: 0 }
 
 .legend {
@@ -679,7 +702,7 @@ body {
   border-top: var(--rule-w) solid var(--ink);
   color: var(--ink-2);
   font-size: var(--t-aside);
-  max-width: 70ch;
+  max-width: var(--prose);
 }
 
 /* ---- the one authored moment: the sheet unfolds ------------------------- */
