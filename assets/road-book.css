@@ -121,15 +121,17 @@ body {
    bords de l'ecran : il gagnait en ampleur et perdait la page, parce qu'il
    commencait la ou plus rien d'autre ne commencait.
 
-   --bord reste le seul pilote : 0 pour aligner sur le texte,
-   calc(50% - 50vw + var(--barre) / 2) pour aller d'un bord de l'ecran a
-   l'autre. La correction de barre compte, parce que vw inclut la barre de
-   defilement la ou 100% ne l'inclut pas. */
-.section--band { --bord: calc(var(--gutter) * -1) }
+   --bord est le seul pilote, et il vaut zero : le dessin commence et finit
+   exactement ou commencent et finissent le texte et le tableau. Deux valeurs
+   plus larges ont ete essayees et rejetees : calc(var(--gutter) * -1), qui
+   mord dans les gouttieres, et calc(50% - 50vw + var(--barre) / 2), qui va
+   d'un bord de l'ecran a l'autre. Les deux donnent de l'ampleur au dessin et
+   lui font perdre la page : il commence la ou plus rien d'autre ne commence.
+   La correction de barre compte si on y revient, parce que vw inclut la barre
+   de defilement la ou 100% ne l'inclut pas. */
+.section--band { --bord: 0px }
 .section--band .band,
 .section--band .ruler { margin-inline: var(--bord) }
-.section--band .stops,
-.section--band .levels { inset: 0 var(--gutter) }
 
 /* ---- running head ------------------------------------------------------- */
 
