@@ -116,14 +116,16 @@ body {
 /* Tout ce qui est de la prose reste a la mesure, quelle que soit la feuille. */
 .lede, .note, .caution, .hint, #course, .error, .colophon, .plan caption { max-width: var(--prose) }
 
-/* Le bandeau de profil sort de la feuille et va d'un bord de l'ecran a l'autre :
-   c'est le seul element qui gagne a chaque pixel, un parcours de 171 km dans
-   64 rem est un trait ecrase. On mesure en pourcentage du conteneur plutot
-   qu'en vw, parce que vw compte la barre de defilement et ajoute un debordement
-   horizontal sur toute la page.
+/* Le bandeau de profil prend toute la largeur de la feuille, gouttieres
+   comprises, et s'arrete la. Une premiere version le faisait sortir jusqu'aux
+   bords de l'ecran : il gagnait en ampleur et perdait la page, parce qu'il
+   commencait la ou plus rien d'autre ne commencait.
 
-   Le pilote --bord permet de revenir a la feuille sans toucher au reste. */
-.section--band { --bord: calc(50% - 50vw + var(--barre) / 2) }
+   --bord reste le seul pilote : 0 pour aligner sur le texte,
+   calc(50% - 50vw + var(--barre) / 2) pour aller d'un bord de l'ecran a
+   l'autre. La correction de barre compte, parce que vw inclut la barre de
+   defilement la ou 100% ne l'inclut pas. */
+.section--band { --bord: calc(var(--gutter) * -1) }
 .section--band .band,
 .section--band .ruler { margin-inline: var(--bord) }
 .section--band .stops,
