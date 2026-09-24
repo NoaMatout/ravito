@@ -10,6 +10,7 @@ import { DEFAULT_TERRAIN, calibrate } from './pace.js';
 import { build, durationOf, longestLeg, type Leg } from './plan.js';
 import { needs, MISSING } from './nutrition.js';
 import * as drink from './drink.js';
+import * as carte from './map.js';
 import { SOURCES } from './sources.js';
 import * as profile from './profile.js';
 import { bands, type Band, type Reading } from './terrain.js';
@@ -434,6 +435,14 @@ function render() {
 
     ${drawPocket(legs, loaded.name, total, total > VALIDATED_HOURS * 3600, startMin)}
 
+    <section class="section section--map" id="map-section" hidden>
+      <h2 class="rubric">Where it runs</h2>
+      <label class="choice"><input type="checkbox" id="map-on">
+        <span>Show the course on a map</span></label>
+      <p class="note" id="map-note"></p>
+      <div id="map" class="map" aria-label="The course on a map"></div>
+    </section>
+
     <section class="section section--drink">
       <h2 class="rubric">Mixing it yourself</h2>
       ${(() => {
@@ -488,6 +497,36 @@ function render() {
     </section>
   </div>`;
 
+  // The map section is revealed by script and never by the stylesheet: without
+  // JavaScript the box would be a control that does nothing. The map itself is
+  // wired once per render, but it is only built when the box is ticked, so no
+  // request leaves the page until the runner asks for one.
+  const section = document.getElementById('map-section');
+  const box = document.getElementById('map-on') as HTMLInputElement | null;
+  const target = document.getElementById('map');
+  if (section && box && target) {
+    section.hidden = false;
+    (document.getElementById('map-note') as HTMLElement).textContent = carte.DISCLOSURE;
+    try {
+      box.checked = localStorage.getItem('ravito.map') === 'yes';
+    } catch {
+      // Private browsing and blocked site data both throw. The map stays off,
+      // which is the safe default anyway.
+    }
+    const paint = () => {
+      if (!loaded) return;
+      const ink = getComputedStyle(document.body).getPropertyValue('--spot').trim() || '#1b5a41';
+      if (box.checked) void carte.show(target, loaded.points, ink);
+      else carte.hide(target);
+      try {
+        localStorage.setItem('ravito.map', box.checked ? 'yes' : 'no');
+      } catch {
+        // The preference is a convenience, not state the plan depends on.
+      }
+    };
+    box.addEventListener('change', paint);
+    paint();
+  }
 }
 
 export function start() {

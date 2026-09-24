@@ -584,6 +584,17 @@ body {
 .note b { font-weight: 600; color: var(--ink) }
 .note b.leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
 
+/* La case qui arme la carte, et la carte elle-meme. La hauteur est portee par
+   une classe et non par :not(:empty) : maplibre mesure son conteneur une seule
+   fois, a la construction, et une carte construite sur zero pixel ne se
+   redimensionne jamais d'elle-meme. */
+.choice { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.9rem; cursor: pointer }
+.choice input { width: 1.05rem; height: 1.05rem; accent-color: var(--spot); margin: 0; flex: none }
+.choice span { font-stretch: 88%; font-weight: 600 }
+.map--on { height: clamp(260px, 42vw, 460px); margin-top: 1.1rem;
+           border: 1px solid var(--rule); background: var(--spot-quiet) }
+.maplibregl-ctrl-attrib { font-size: var(--t-mark) }
+
 /* A fourteen-leg plan cannot compress below its content on a phone. The table
    scrolls inside its own region rather than dragging the whole sheet sideways,
    which is the difference between a wide table and a broken page. */
@@ -753,7 +764,8 @@ body {
   body { font-size: 10pt }
   .sheet { max-width: none; padding: 0 }
   .lede, .form, .intake, .blank, .readings, .legend, .note, .caution,
-  .colophon, .cut button, .section:not(.section--band) { display: none }
+  .colophon, .cut button, .section:not(.section--band), .section--map { display: none }
+  .section--map { display: none }
   .section--band { margin-top: 12pt }
   .card { display: none }
     .stop b { font-size: 5pt }
