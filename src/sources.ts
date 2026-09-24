@@ -31,6 +31,20 @@ export const SOURCES: readonly Source[] = [
     reference:
       'Tiller NB et al. International Society of Sports Nutrition Position Stand: nutritional considerations for single-stage ultra-marathon training and racing. J Int Soc Sports Nutr, 2019. doi:10.1186/s12970-019-0312-9',
   },
+  {
+    id: 'sucrose-oxidation',
+    claim:
+      'Sucrose, which is table sugar, hydrolyses to glucose and fructose in equal parts and reaches exogenous oxidation rates that do not differ significantly from a glucose and fructose mixture. Sucrose hydrolysis is not rate limiting.',
+    reference:
+      'Rowlands DS, Houltham S, Musa-Veloso K, Brown F, Paulionis L, Bailey D. Fructose and Sucrose Intake Increase Exogenous Carbohydrate Oxidation during Exercise. Nutrients, 2017. doi:10.3390/nu9020167',
+  },
+  {
+    id: 'drink-concentration',
+    claim:
+      'Carbohydrate drinks are recommended at 5 to 8 percent. Above about 6 percent, fluid delivery is compromised and residual carbohydrate in the intestine raises gastrointestinal symptoms.',
+    reference:
+      'de Oliveira EP, Burini RC, Jeukendrup A. Carbohydrate-Dependent, Exercise-Induced Gastrointestinal Distress. Nutrients, 2014. doi:10.3390/nu6104191',
+  },
 ];
 
 export function sourceFor(id: string): Source {

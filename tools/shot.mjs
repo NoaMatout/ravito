@@ -19,6 +19,7 @@
  *        --empty                        capture the blank booklet, no file
  *        --print                        emulate print media and write a PDF
  *        --focus=<n>                    open the nth aid station's slip
+ *        --set=<id>:<value>,...         fill input fields before capturing
  *        --url=<href>                   capture a deployed page instead of the
  *                                       local one; implies --empty, since the
  *                                       race file is not published
@@ -90,6 +91,17 @@ const load = flag('empty') || opt('url')
        i.dispatchEvent(new Event('change'));
        for (let n = 0; n < 100 && !document.querySelector('.plan'); n++)
          await new Promise((r) => setTimeout(r, 50));
+       ${
+         opt('set')
+           ? opt('set')
+               .split(',')
+               .map((pair) => {
+                 const [id, ...rest] = pair.split(':');
+                 return `{const e=document.getElementById('${id}');e.value=${JSON.stringify(rest.join(':'))};e.dispatchEvent(new Event('input',{bubbles:true}));}`;
+               })
+               .join('')
+           : ''
+       }
        ${reading ? `document.querySelector('[data-reading="${reading}"]').click();` : ''}
        ${opt('focus') ? `document.querySelectorAll('.stop')[${Number(opt('focus')) - 1}].focus();` : ''}
        await new Promise((r) => setTimeout(r, 700));
