@@ -127,6 +127,7 @@ function drawBand(
   shape: profile.Profile,
   course: string,
   legs: readonly Leg[],
+  rules: readonly { value: number; top: number }[],
 ): string {
   const pct = (x: number) => ((x / profile.VIEW_WIDTH) * 100).toFixed(3);
   const slices = shape.slices.length
@@ -164,7 +165,7 @@ function drawBand(
       // mark near either end would otherwise push the slip off the sheet.
       return `<button class="stop${at > 96 ? ' end' : ''}" type="button"
                 style="left:${at}%" aria-label="${spoken}">
-        <i></i><u></u>${room ? `<b>${n}</b>` : ''}
+        <i aria-hidden="true"></i><u aria-hidden="true"></u>${room ? `<b aria-hidden="true">${n}</b>` : ''}
       </button><span class="card" aria-hidden="true" style="--at:${at}%">
         <b>R${n}</b><span class="who">${m.name}</span>
         <span class="where">${km(m.distanceM)} &middot; reached ${hhmm(leg.cumulativeSeconds)}</span>
@@ -197,6 +198,13 @@ function drawBand(
         .join('')}</ul>`
     : '';
 
+  const levels = rules
+    .map(
+      (l) =>
+        `<span class="level" style="top:${l.top.toFixed(2)}%"><b>${Math.round(l.value)}</b></span>`,
+    )
+    .join('');
+
   return `
     <div class="band">
       <svg viewBox="0 0 ${profile.VIEW_WIDTH} ${profile.VIEW_HEIGHT}"
@@ -206,7 +214,8 @@ function drawBand(
         ${slices}
         <path class="band-line" d="${shape.line}"/>
       </svg>
-      <div class="stops" aria-hidden="true">${stops}</div>
+      <div class="levels" aria-hidden="true">${levels}</div>
+      <div class="stops">${stops}</div>
     </div>
     <div class="ruler" aria-hidden="true">${ticks.join('')}</div>
     ${legend}`;
@@ -322,6 +331,8 @@ function render() {
     : [];
   const shape = profile.build(loaded.points, named, loaded.readings[reading]);
   const current = READINGS.find((r) => r.id === reading) ?? READINGS[0];
+  const rules = profile.levels(shape.lowest, shape.highest);
+  const rulingM = rules.length > 1 ? Math.round(rules[1].value - rules[0].value) : 0;
 
   $('plan').innerHTML = `<div class="settle">
     <section class="section">
@@ -351,9 +362,11 @@ function render() {
                     aria-selected="${r.id === reading}">${r.label}</button>`,
         ).join('')}
       </div>
-      ${drawBand(shape, loaded.name, legs)}
+      ${drawBand(shape, loaded.name, legs, rules)}
       <p class="note">${Math.round(shape.lowest)} m at the lowest point,
-        ${Math.round(shape.highest)} m at the highest. ${current.note}</p>
+        ${Math.round(shape.highest)} m at the highest${
+          rulingM ? `, ruled every ${rulingM} m` : ''
+        }. ${current.note}</p>
     </section>
 
     <section class="section section--plan">
@@ -388,9 +401,6 @@ function render() {
     </section>
   </div>`;
 
-  // The line draws itself once, and only the browser knows how long it is.
-  const line = $('plan').querySelector<SVGPathElement>('.band-line');
-  if (line) line.style.setProperty('--len', String(Math.ceil(line.getTotalLength())));
 }
 
 export function start() {

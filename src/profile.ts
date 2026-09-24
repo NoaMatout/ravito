@@ -119,6 +119,21 @@ export function build(
   return { area, line, markers, slices, lowest, highest, distanceM };
 }
 
+/** Round altitudes to rule across the drawing, three to five of them.
+ *
+ *  A profile without a scale says a course goes up without saying how far up.
+ *  The step is the smallest round one that does not crowd the band. */
+export function levels(lowest: number, highest: number): { value: number; top: number }[] {
+  const span = highest - lowest;
+  if (span < 20) return [];
+  const step = [25, 50, 100, 200, 250, 500, 1000, 2000].find((s) => span / s <= 5) ?? 2000;
+  const out: { value: number; top: number }[] = [];
+  for (let v = Math.ceil(lowest / step) * step; v <= highest; v += step) {
+    out.push({ value: v, top: ((highest - v) / span) * 100 });
+  }
+  return out;
+}
+
 /** The hatch that doubles every band, so no reading depends on hue.
  *
  *  The hatch is not decoration and it is not redundant: its direction is the
