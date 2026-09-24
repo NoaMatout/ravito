@@ -245,6 +245,7 @@ function drawBand(
 }
 
 function drawPlan(legs: readonly Leg[], worst: Leg | null, startMin: number | null): string {
+  const anyWater = legs.some((l) => l.water);
   const rows = legs
     .map(
       (l, i) => `<tr${l === worst ? ' class="longest"' : ''}>
@@ -253,7 +254,10 @@ function drawPlan(legs: readonly Leg[], worst: Leg | null, startMin: number | nu
         <td class="drop-1">${km(l.toM)}</td>
         <td>${hhmm(l.seconds)}</td>
         <td class="drop-2">${Math.round(l.ascent)} m</td>
-        <td>${l.carbsLow}&ndash;${l.carbsHigh} g</td>
+        <td${l.water ? ' class="water"' : ''}>${l.carbsLow}&ndash;${l.carbsHigh} g${
+          l.water ? ' <abbr title="water only, no reload">w</abbr>' : ''
+        }</td>
+        ${anyWater ? `<td class="carry">${l.carryHigh} g</td>` : ''}
         <td class="drop-3">${
           startMin === null ? hhmm(l.cumulativeSeconds) : clock(startMin, l.cumulativeSeconds)
         }</td>
@@ -267,6 +271,12 @@ function drawPlan(legs: readonly Leg[], worst: Leg | null, startMin: number | nu
     <b>${startMin === null ? 'elapsed' : 'arrive'}</b></span>.</span>
   For the leg alone: <b>time</b><span class="drop-2">, <b>D+</b></span>,
   <b>carbs</b>.${
+    anyWater
+      ? ` <b>Carry</b> is what to leave the previous full stand with: a stand
+          marked <b>w</b> has water only, so the food for the leg after it
+          travels on you.`
+      : ''
+  }${
     longest
       ? ` <b class="leg">${longest}</b> is the longest, and it is the leg that
           decides your pack and flask capacity.`
@@ -277,6 +287,7 @@ function drawPlan(legs: readonly Leg[], worst: Leg | null, startMin: number | nu
       <thead><tr>
         <th>leg</th><th>to</th><th class="drop-1">at km</th><th>time</th>
         <th class="drop-2">D+</th><th>carbs</th>
+        ${anyWater ? '<th>carry</th>' : ''}
         <th class="drop-3">${startMin === null ? 'elapsed' : 'arrive'}</th>
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -347,7 +358,13 @@ function render() {
   const typed = value('aid')
     .split(/[,;\s]+/)
     .filter(Boolean)
-    .map((s) => ({ distanceM: Number(s.replace(',', '.')) * 1000 }))
+    .map((s) => {
+      // A kilometre followed by w is a stand that carries water and nothing
+      // else. Compact enough to type, and it survives a copy and paste.
+      const water = /w$/i.test(s);
+      const km = Number(s.replace(/w$/i, '').replace(',', '.'));
+      return { distanceM: km * 1000, water };
+    })
     .filter((a) => Number.isFinite(a.distanceM));
   const stations = typed.length ? typed : loaded.stations;
 
@@ -511,7 +528,33 @@ export function start() {
       render();
       return;
     }
-    if (target.closest('#card')) window.print();
+    if (target.closest('#card')) {
+      window.print();
+      return;
+    }
+
+    // Clicking the drawing adds a stand where the pointer is. The typed field
+    // stays the single source of truth, so the addition is visible, editable
+    // and reversible with the keyboard alone.
+    const svg = target.closest<SVGSVGElement>('.band svg');
+    if (!svg || target.closest('.stop') || !loaded) return;
+    const box = svg.getBoundingClientRect();
+    const share = ((e as MouseEvent).clientX - box.left) / box.width;
+    if (share <= 0 || share >= 1) return;
+    const atKm = (share * loaded.points[loaded.points.length - 1].distance) / 1000;
+
+    const field = document.getElementById('aid') as HTMLInputElement;
+    // Seeding matters: the first click would otherwise replace the stands the
+    // file carries, because a typed list wins over the file.
+    const seed =
+      field.value.trim() === '' && loaded.stations.length
+        ? loaded.stations.map((s) => (s.distanceM / 1000).toFixed(1)).join(', ')
+        : field.value.trim();
+    const parts = seed ? seed.split(/[,;\s]+/).filter(Boolean) : [];
+    parts.push(atKm.toFixed(1));
+    parts.sort((a, b) => parseFloat(a) - parseFloat(b));
+    field.value = parts.join(', ');
+    render();
   });
 }
 

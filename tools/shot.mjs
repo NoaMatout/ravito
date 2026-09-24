@@ -19,7 +19,9 @@
  *        --empty                        capture the blank booklet, no file
  *        --print                        emulate print media and write a PDF
  *        --focus=<n>                    open the nth aid station's slip
- *        --set=<id>:<value>,...         fill input fields before capturing
+ *        --set=<id>:<value>;...         fill input fields before capturing.
+ *                                       Pairs split on ';' because a value may
+ *                                       itself contain commas.
  *        --url=<href>                   capture a deployed page instead of the
  *                                       local one; implies --empty, since the
  *                                       race file is not published
@@ -73,6 +75,10 @@ if (flag('light')) media.push({ name: 'prefers-color-scheme', value: 'light' });
 if (media.length) await send('Emulation.setEmulatedMedia', { features: media });
 await send('Page.enable');
 const page = opt('url') || 'http://localhost:8123/index.html';
+await send('Network.enable');
+// Le HTML porte un parametre anti-cache, pas la feuille de style : sans ca,
+// une correction CSS se mesure sur l'ancienne version et le defaut survit.
+await send('Network.setCacheDisabled', { cacheDisabled: true });
 await send('Page.navigate', { url: `${page}${page.includes('?') ? '&' : '?'}t=${Date.now()}` });
 await new Promise((r) => setTimeout(r, opt('url') ? 3500 : 1500));
 
@@ -94,7 +100,7 @@ const load = flag('empty') || opt('url')
        ${
          opt('set')
            ? opt('set')
-               .split(',')
+               .split(';')
                .map((pair) => {
                  const [id, ...rest] = pair.split(':');
                  return `{const e=document.getElementById('${id}');e.value=${JSON.stringify(rest.join(':'))};e.dispatchEvent(new Event('input',{bubbles:true}));}`;

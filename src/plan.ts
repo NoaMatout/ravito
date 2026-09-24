@@ -10,8 +10,18 @@ import type { Segment } from './segments.js';
 import { speedAt, type TerrainProfile, DEFAULT_TERRAIN } from './pace.js';
 import { CARBOHYDRATE_PER_HOUR } from './nutrition.js';
 
-/** An aid station, from the file's waypoints or typed by the runner. */
-export type AidStation = { readonly distanceM: number; readonly name?: string };
+/** An aid station, from the file's waypoints or typed by the runner.
+ *
+ *  `water` marks a stand that carries water and nothing else. It changes
+ *  nothing about what the runner eats and everything about what the runner
+ *  carries: the food for the leg after it has to leave the previous full
+ *  stand. A file's waypoints never say which is which, so they default to
+ *  full and the interface says so. */
+export type AidStation = {
+  readonly distanceM: number;
+  readonly name?: string;
+  readonly water?: boolean;
+};
 
 export type Leg = {
   readonly index: number;
@@ -23,6 +33,12 @@ export type Leg = {
   readonly carbsLow: number;
   readonly carbsHigh: number;
   readonly cumulativeSeconds: number;
+  /** True when the stand closing this leg carries water only. */
+  readonly water: boolean;
+  /** Carbohydrate to leave the previous full stand with: this leg plus every
+   *  following leg that ends at water only. Equal to carbsHigh when the next
+   *  stand is a full one. */
+  readonly carryHigh: number;
 };
 
 export function durationOf(
@@ -83,7 +99,17 @@ export function build(
       carbsLow: Math.round(CARBOHYDRATE_PER_HOUR.low * hours),
       carbsHigh: Math.round(CARBOHYDRATE_PER_HOUR.high * hours),
       cumulativeSeconds: cumulative,
+      water: Boolean(declared[i]?.water),
+      carryHigh: 0,
     });
+  }
+
+  // What to carry accumulates backwards: a leg that ends at water only cannot
+  // be reloaded, so its food has to be on the runner already.
+  let running = 0;
+  for (let i = legs.length - 1; i >= 0; i -= 1) {
+    running = legs[i].water ? running + legs[i].carbsHigh : legs[i].carbsHigh;
+    legs[i] = { ...legs[i], carryHigh: running };
   }
   return legs;
 }

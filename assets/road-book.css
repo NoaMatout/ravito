@@ -570,6 +570,14 @@ body {
 .plan tbody td { font-stretch: 88%; font-variant-numeric: tabular-nums }
 .plan tbody tr:last-child td { border-bottom: 4px double var(--ink) }
 .plan .leg { font-stretch: 72%; font-weight: 700; letter-spacing: 0.06em; color: var(--spot) }
+.plan .carry { font-weight: 700 }
+/* Le marqueur d'eau se lit au trait, pas a la teinte : en bleu il tombait a
+   3,87:1 sur le papier. C'est aussi la regle du monde, l'etat se dessine. */
+.plan abbr { text-decoration: none; font-stretch: 72%; font-weight: 700; font-size: var(--t-mark);
+             letter-spacing: 0.08em; color: var(--ink); cursor: help;
+             border-bottom: 2px solid currentColor; padding-bottom: 1px }
+/* Le dessin devient cliquable : le curseur doit le dire. */
+.band svg { cursor: crosshair }
 .plan .name { font-stretch: 100%; font-weight: 500 }
 .plan tbody tr.longest td { font-weight: 700 }
 .plan tbody td:not(.name) { white-space: nowrap }
